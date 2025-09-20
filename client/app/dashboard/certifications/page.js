@@ -17,7 +17,7 @@ import {
   Calendar,
   Award,
   ExternalLink,
-  Certificate,
+  GraduationCap,
   Clock
 } from "lucide-react";
 import api from '@/services/api';
@@ -248,7 +248,7 @@ export default function CertificationsPage() {
                       Certification Title *
                     </label>
                     <div className="relative">
-                      <Certificate className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
                         id="title"
                         name="title"
@@ -368,7 +368,7 @@ export default function CertificationsPage() {
           {certifications.length === 0 ? (
             <Card>
               <CardContent className="text-center py-12">
-                <Certificate className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <GraduationCap className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No certifications added yet</h3>
                 <p className="text-gray-600 mb-4">Start building your professional credentials by adding your first certification</p>
                 <Button onClick={() => setShowForm(true)}>
@@ -384,7 +384,7 @@ export default function CertificationsPage() {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <Certificate className="h-6 w-6 text-blue-600" />
+                        <GraduationCap className="h-6 w-6 text-blue-600" />
                         <div>
                           <CardTitle className="text-xl">{certification.title}</CardTitle>
                           <div className="flex items-center space-x-2 mt-1">
