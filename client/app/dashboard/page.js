@@ -231,9 +231,11 @@ export default function DashboardPage() {
               <p className="text-gray-600 mb-6">
                 Generate a professional resume from your profile data
               </p>
-              <Button size="lg" className="px-8">
-                Generate Resume
-              </Button>
+              <Link href="/dashboard/resumes">
+                <Button size="lg" className="px-8">
+                  Generate Resume
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

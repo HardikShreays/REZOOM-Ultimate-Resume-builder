@@ -2,6 +2,7 @@
 const prisma = require("../lib/prisma");
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
+const { generateResumeContent } = require('./resumeGen');
 
 const router = express.Router();
 
@@ -456,5 +457,107 @@ router.delete('/certifications/:id', requireAuth, async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+
+// Get all resumes for a user
+router.get("/resumes", requireAuth, async (req, res) => {
+  try {
+    const resumes = await prisma.resume.findMany({
+      where: { userId: req.user.id },
+      orderBy: { createdAt: 'desc' }
+    });
+    return res.json({ resumes });
+  } catch (err) {
+    console.error('Get resumes error', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get a specific resume by ID
+router.get("/resumes/:id", requireAuth, async (req, res) => {
+  try {
+    const resumeId = parseInt(req.params.id);
+    const resume = await prisma.resume.findFirst({
+      where: { 
+        id: resumeId, 
+        userId: req.user.id 
+      }
+    });
+    
+    if (!resume) {
+      return res.status(404).json({ message: 'Resume not found' });
+    }
+    
+    return res.json({ resume });
+  } catch (err) {
+    console.error('Get resume error', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Generate a new resume
+router.post("/resumes",requireAuth, async(req,res) => {
+  try{
+    const { title, template = 'professional' } = req.body;
+    // Get user data with all related information
+    const user = await prisma.user.findUnique({
+      where:{id : req.user.id},
+      include: {experiences: {
+        orderBy: { startDate: 'desc' }
+      },
+      educations: {
+        orderBy: { startYear: 'desc' }
+      },
+      skills: true,
+      projects: {
+        orderBy: { createdAt: 'desc' }
+      },
+      certifications: {
+        orderBy: { issueDate: 'desc' }
+      }
+    }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+
+    const resumeContent = generateResumeContent(user,'ats-friendly');
+    const resume = await prisma.resume.create({
+      data: {
+        title: title || `${user.name} - Resume`,
+        content: resumeContent,
+        userId: req.user.id
+      }
+    });
+    return res.status(201).json({ resume });
+
+  }catch(err){
+    console.error('Create resume error', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+// Delete a resume
+router.delete('/resumes/:id', requireAuth, async (req, res) => {
+  try {
+    const resumeId = parseInt(req.params.id);
+    
+    await prisma.resume.delete({
+      where: { 
+        id: resumeId, 
+        userId: req.user.id 
+      }
+    });
+
+    return res.json({ message: 'Resume deleted successfully' });
+  } catch (err) {
+    console.error('Delete resume error', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 module.exports = router;
