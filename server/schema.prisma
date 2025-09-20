@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int             @id @default(autoincrement())
+  name           String
+  email          String          @unique
+  password       String
+  phoneNumber    String?
+  githubUrl      String?
+  hackerrankUrl  String?
+  geeksforgeeksUrl String?
+  codeforcesUrl  String?
+  leetcodeUrl    String?
+  codechefUrl    String?
+  linkedinUrl    String?
+  twitterUrl     String?
+  portfolioUrl   String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  resumes        Resume[]
+  experiences    Experience[]
+  educations     Education[]
+  projects       Project[]
+  skills         Skill[]
+  certifications Certification[]
+}
+
+model Resume {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.Text
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Experience {
+  id           Int      @id @default(autoincrement())
+  company      String
+  role         String
+  startDate    DateTime
+  endDate      DateTime?
+  description  String   @db.Text
+  technologies String?  @db.Text
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Education {
+  id          Int      @id @default(autoincrement())
+  degree      String
+  institution String
+  startYear   Int
+  endYear     Int?
+  description String?  @db.Text
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  techStack   String   @db.Text
+  githubUrl   String?
+  liveUrl     String?
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Skill {
+  id         Int      @id @default(autoincrement())
+  name       String
+  proficiency String  // e.g., "Beginner", "Intermediate", "Advanced", "Expert"
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Certification {
+  id          Int      @id @default(autoincrement())
+  title       String
+  issuer      String
+  issueDate   DateTime
+  expiryDate  DateTime?
+  credentialId String?
+  credentialUrl String?
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
