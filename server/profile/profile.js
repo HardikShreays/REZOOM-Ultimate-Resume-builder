@@ -3,6 +3,7 @@ const prisma = require("../lib/prisma");
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
 const { generateResumeContent } = require('./resumeGen');
+const PDFGenerator = require('../services/pdfGenerator');
 
 const router = express.Router();
 
@@ -559,5 +560,58 @@ router.delete('/resumes/:id', requireAuth, async (req, res) => {
   }
 });
 
+// Generate PDF from resume
+router.get('/resumes/:id/pdf', requireAuth, async (req, res) => {
+  try {
+    const resumeId = parseInt(req.params.id);
+    const resume = await prisma.resume.findFirst({
+      where: { 
+        id: resumeId, 
+        userId: req.user.id 
+      }
+    });
+    
+    if (!resume) {
+      return res.status(404).json({ message: 'Resume not found' });
+    }
+
+    const pdfGenerator = new PDFGenerator();
+    const pdfBuffer = await pdfGenerator.generatePDFFromLaTeX(resume.content, `resume_${resumeId}`);
+    
+    // Set headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${resume.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    return res.status(500).json({ message: 'Failed to generate PDF' });
+  }
+});
+
+// Generate PDF from LaTeX content directly
+router.post('/resumes/pdf', requireAuth, async (req, res) => {
+  try {
+    const { latexContent, title = 'Resume' } = req.body;
+    
+    if (!latexContent) {
+      return res.status(400).json({ message: 'LaTeX content is required' });
+    }
+
+    const pdfGenerator = new PDFGenerator();
+    const pdfBuffer = await pdfGenerator.generatePDFFromLaTeX(latexContent, 'temp_resume');
+    
+    // Set headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    return res.status(500).json({ message: 'Failed to generate PDF' });
+  }
+});
 
 module.exports = router;
