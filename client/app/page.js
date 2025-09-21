@@ -151,7 +151,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Choose Your Role</h3>
               <p className="text-gray-600">
-                Select the job role you&apos;re applying for and customize your resume
+                Select the job role you're applying for and customize your resume
               </p>
             </div>
             
@@ -202,7 +202,7 @@ export default function Home() {
             Ready to Land Your Dream Job?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of professionals who&apos;ve already created winning resumes
+            Join thousands of professionals who've already created winning resumes
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup">
