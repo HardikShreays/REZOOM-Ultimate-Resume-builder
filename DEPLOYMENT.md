@@ -124,6 +124,7 @@ module.exports = async (req, res) => {
    - Check Node.js version (should be 18+)
    - Ensure all dependencies are installed
    - Check for TypeScript errors
+   - Fix ESLint errors (e.g., unescaped apostrophes: use `&apos;` instead of `'`)
 
 2. **Database Connection Issues**
    - Verify DATABASE_URL is correct
