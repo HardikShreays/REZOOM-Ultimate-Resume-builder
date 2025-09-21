@@ -562,12 +562,20 @@ router.delete('/resumes/:id', requireAuth, async (req, res) => {
 
 // Generate PDF from resume
 router.get('/resumes/:id/pdf', requireAuth, async (req, res) => {
+  console.log('api hit')
   try {
     const resumeId = parseInt(req.params.id);
     const resume = await prisma.resume.findFirst({
       where: { 
         id: resumeId, 
         userId: req.user.id 
+      },
+      include: {
+        user: {
+          select: {
+            name: true
+          }
+        }
       }
     });
     
@@ -578,9 +586,10 @@ router.get('/resumes/:id/pdf', requireAuth, async (req, res) => {
     const pdfGenerator = new PDFGenerator();
     const pdfBuffer = await pdfGenerator.generatePDFFromLaTeX(resume.content, `resume_${resumeId}`);
     
-    // Set headers for PDF download
+    // Set headers for PDF download with user name
+    const filename = `Resume-${resume.user.name.replace(/[^a-z0-9]/gi, '_')}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${resume.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf"`);
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
     res.setHeader('Content-Length', pdfBuffer.length);
     
     res.send(pdfBuffer);

@@ -38,13 +38,16 @@
 ### 🎯 Core Features
 - **🤖 AI-Powered Generation**: Generate role-specific resumes automatically based on your profile data
 - **📄 ATS Optimization**: Every resume is optimized to pass Applicant Tracking Systems
-- **🎨 Multiple Formats**: Export to PDF, Word, or share online with custom URLs
+- **📄 PDF Export**: Download professional PDF resumes with custom naming (Resume-{Name}.pdf)
+- **👁️ PDF Preview**: View resumes in browser before downloading
+- **🎨 Multiple Templates**: Choose from ATS-Friendly, Professional, and Creative templates
 - **👤 User Profiles**: Comprehensive user profiles with social links and portfolio integration
 - **📚 Experience Management**: Add and manage work experiences with detailed descriptions
 - **🎓 Education Tracking**: Track educational background and achievements
 - **💼 Project Portfolio**: Showcase your projects with tech stacks and live links
 - **🛠️ Skills Management**: Organize skills by proficiency levels
 - **🏆 Certifications**: Track professional certifications and credentials
+- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
 
 ### 🔒 Security Features
 - **🔐 JWT Authentication**: Secure token-based authentication
@@ -71,6 +74,8 @@
 - **🐬 MySQL** - Relational database
 - **🔐 JWT** - JSON Web Token authentication
 - **🛡️ Bcrypt** - Password hashing
+- **📄 Puppeteer** - PDF generation from LaTeX content
+- **📝 LaTeX** - Professional document formatting
 
 ### Development Tools
 - **📝 ESLint** - Code linting and formatting
@@ -139,6 +144,16 @@
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:3001
 
+### Quick Start - Generate Your First Resume
+
+1. **Create Account** - Sign up at http://localhost:3000/signup
+2. **Build Profile** - Add your experience, education, skills, and projects
+3. **Generate Resume** - Go to Dashboard → Resume Builder
+4. **Choose Template** - Select from ATS-Friendly, Professional, or Creative
+5. **Download PDF** - Click "Download PDF" to get your professional resume
+
+**PDF Format**: Files are automatically named as `Resume-{YourName}.pdf`
+
 ---
 
 ## 📁 Project Structure
@@ -153,9 +168,11 @@ REZOOM - The Ultimate Resume Builder/
 │   │   │   ├── experience/         # Work experience management
 │   │   │   ├── profile/            # User profile management
 │   │   │   ├── projects/           # Project portfolio
+│   │   │   ├── resumes/            # Resume builder & PDF generation
 │   │   │   └── skills/             # Skills management
 │   │   ├── login/                  # Authentication pages
 │   │   ├── signup/
+│   │   ├── layout.js               # Root layout with SEO metadata
 │   │   └── page.js                 # Landing page
 │   ├── components/                 # Reusable UI components
 │   │   └── ui/                     # Base UI components
@@ -167,8 +184,14 @@ REZOOM - The Ultimate Resume Builder/
 │   ├── middleware/                 # Custom middleware
 │   │   └── auth.js                 # JWT authentication middleware
 │   ├── profile/                    # Profile management routes
+│   │   ├── profile.js              # User profile CRUD operations
+│   │   └── resumeGen.js            # LaTeX resume generation
+│   ├── services/                   # Business logic services
+│   │   └── pdfGenerator.js         # PDF generation with Puppeteer
 │   ├── lib/                        # Database connection
 │   ├── migrations/                 # Database migrations
+│   ├── temp/                       # Temporary files for PDF generation
+│   ├── resume.cls                  # LaTeX resume template
 │   └── schema.prisma              # Database schema
 └── README.md                       # Project documentation
 ```
@@ -245,6 +268,35 @@ Add skill to profile.
 #### `POST /profile/certification`
 Add certification.
 
+### Resume & PDF Generation Endpoints
+
+#### `GET /profile/resumes`
+Get all resumes for the authenticated user.
+
+#### `POST /profile/resumes`
+Generate a new resume with specified template.
+
+**Request Body:**
+```json
+{
+  "title": "Software Engineer Resume",
+  "template": "ats-friendly"
+}
+```
+
+#### `GET /profile/resumes/:id/pdf`
+Download resume as PDF file.
+
+**Headers:**
+```
+Authorization: Bearer <jwt-token>
+```
+
+**Response:** PDF file download with filename format: `Resume-{UserName}.pdf`
+
+#### `DELETE /profile/resumes/:id`
+Delete a specific resume.
+
 ---
 
 ## 🎨 UI Components
@@ -260,6 +312,31 @@ The project uses a modern component library built with:
 - `Card` - Content container with header, content, and footer
 - `Input` - Form input with validation states
 - `Badge` - Status and category indicators
+
+---
+
+## 📄 PDF Generation Technology
+
+REZOOM uses advanced PDF generation technology to create professional resumes:
+
+### LaTeX to PDF Pipeline
+1. **Profile Data Collection** - User profile information is gathered
+2. **LaTeX Generation** - Custom LaTeX templates are populated with user data
+3. **HTML Conversion** - LaTeX content is converted to HTML for rendering
+4. **PDF Generation** - Puppeteer renders HTML to high-quality PDF
+5. **Custom Naming** - PDFs are named with format `Resume-{UserName}.pdf`
+
+### Available Templates
+- **ATS-Friendly**: Clean, professional format optimized for ATS systems
+- **Professional**: Modern professional format with enhanced styling
+- **Creative**: Creative format with visual elements
+
+### Features
+- **High-Quality Output**: 300 DPI PDF generation
+- **A4 Format**: Standard resume paper size
+- **Professional Styling**: Times New Roman font, proper margins
+- **Browser Preview**: View PDFs in browser before downloading
+- **Secure Downloads**: Protected by JWT authentication
 
 ---
 
@@ -331,19 +408,45 @@ The application uses JWT (JSON Web Tokens) for authentication:
 
 ---
 
+## 🆕 Recent Updates
+
+### v2.0.0 - PDF Generation & Enhanced UI
+- ✅ **PDF Export Functionality** - Download professional PDF resumes
+- ✅ **PDF Preview** - View resumes in browser before downloading
+- ✅ **Custom PDF Naming** - Files named as `Resume-{UserName}.pdf`
+- ✅ **Removed LaTeX Downloads** - Streamlined UI, PDF-only downloads
+- ✅ **Enhanced Page Titles** - Dynamic SEO-optimized page titles
+- ✅ **Improved Navigation** - Better user experience with clear page structure
+- ✅ **Professional Templates** - ATS-Friendly, Professional, and Creative options
+
+### Technical Improvements
+- **Puppeteer Integration** - High-quality PDF generation
+- **LaTeX to HTML Conversion** - Advanced document rendering
+- **Dynamic Metadata** - SEO-optimized page titles and descriptions
+- **Enhanced Security** - Protected PDF downloads with JWT authentication
+
+---
+
 ## 📱 Screenshots
 
 ### Landing Page
-- Modern, responsive design
-- Feature highlights
-- Call-to-action sections
-- Professional statistics
+- Modern, responsive design with gradient backgrounds
+- Feature highlights with animated cards
+- Call-to-action sections with professional CTAs
+- Professional statistics and testimonials
 
 ### Dashboard
-- User profile management
-- Experience tracking
-- Project portfolio
-- Skills and certifications
+- Comprehensive user profile management
+- Experience tracking with date ranges
+- Project portfolio with tech stack display
+- Skills and certifications management
+- Resume builder with template selection
+
+### Resume Builder
+- Template selection interface
+- PDF preview and download functionality
+- Professional resume generation
+- Custom naming and organization
 
 ---
 
@@ -390,7 +493,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <p>Made with ❤️ by the REZOOM Team</p>
+  <p>Made with ❤️ by Hardik Shreyas</p>
   <p>
     <a href="#-rezoom---the-ultimate-resume-builder">⬆️ Back to Top</a>
   </p>

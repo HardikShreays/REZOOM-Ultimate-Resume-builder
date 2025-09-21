@@ -8,6 +8,8 @@ import { FileText, User, LogOut, Plus, Eye } from "lucide-react";
 import Link from 'next/link';
 import api from '@/services/api';
 
+// Note: Since this is a client component, we'll use useEffect to set the title dynamically
+
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,15 @@ export default function DashboardPage() {
 
     checkAuth();
   }, [router]);
+
+  // Set page title dynamically
+  useEffect(() => {
+    if (user) {
+      document.title = `Dashboard - Welcome ${user.name} | REZOOM`;
+    } else {
+      document.title = 'Dashboard | REZOOM';
+    }
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
