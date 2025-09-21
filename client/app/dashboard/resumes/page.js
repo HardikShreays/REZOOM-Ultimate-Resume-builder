@@ -11,15 +11,14 @@ import {
   User, 
   LogOut, 
   Plus, 
-  Eye, 
-  Download,
   Trash2,
   Edit,
   ArrowLeft,
   FileDown,
   RefreshCw,
   Settings,
-  Palette
+  Palette,
+  FileImage
 } from "lucide-react";
 import Link from 'next/link';
 import api from '@/services/api';
@@ -74,6 +73,15 @@ export default function ResumesPage() {
     checkAuth();
   }, [router]);
 
+  // Set page title dynamically
+  useEffect(() => {
+    if (user) {
+      document.title = `Resume Builder - ${user.name} | REZOOM`;
+    } else {
+      document.title = 'Resume Builder | REZOOM';
+    }
+  }, [user]);
+
   const fetchResumes = async () => {
     try {
       const response = await api.get('/profile/resumes');
@@ -123,64 +131,71 @@ export default function ResumesPage() {
     }
   };
 
-  const handleDownloadResume = async (resume) => {
+
+
+  const handleViewPDF = async (resume) => {
     try {
-      // Create a blob from the LaTeX content
-      const blob = new Blob([resume.content], { type: 'text/plain' });
+      // Get the API base URL from the environment or use default
+      const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const pdfUrl = `${baseURL}/profile/resumes/${resume.id}/pdf`;
+      
+      // Create a temporary link to handle authentication
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Open PDF with authentication
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.target = '_blank';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        
+        // Add authorization header via fetch
+        fetch(pdfUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }).then(response => {
+          if (response.ok) {
+            response.blob().then(blob => {
+              const url = window.URL.createObjectURL(blob);
+              window.open(url, '_blank');
+              window.URL.revokeObjectURL(url);
+            });
+          } else {
+            setError('Failed to load PDF');
+          }
+        }).catch(err => {
+          console.log(err)
+          setError('Failed to open PDF preview');
+        });
+        
+        document.body.removeChild(link);
+      } else {
+        window.open(pdfUrl, '_blank');
+      }
+    } catch (err) {
+      setError('Failed to open PDF preview');
+    }
+  };
+
+  const handleDownloadPDF = async (resume) => {
+    try {
+      const response = await api.get(`/profile/resumes/${resume.id}/pdf`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${resume.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.tex`;
+      a.download = `Resume-${user.name.replace(/[^a-z0-9]/gi, '_')}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      setError('Failed to download resume');
+      setError('Failed to download PDF');
     }
-  };
-
-  const handlePreviewResume = (resume) => {
-    // Open LaTeX content in a new window for preview
-    const newWindow = window.open('', '_blank');
-    newWindow.document.write(`
-      <html>
-        <head>
-          <title>Resume Preview - ${resume.title}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
-            pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .actions { margin: 20px 0; }
-            button { margin-right: 10px; padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>Resume Preview: ${resume.title}</h1>
-            <p>LaTeX Source Code</p>
-          </div>
-          <div class="actions">
-            <button onclick="downloadResume()">Download .tex File</button>
-            <button onclick="window.close()">Close Preview</button>
-          </div>
-          <pre>${resume.content}</pre>
-          <script>
-            function downloadResume() {
-              const blob = new Blob([\`${resume.content.replace(/`/g, '\\`')}\`], { type: 'text/plain' });
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = '${resume.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.tex';
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-            }
-          </script>
-        </body>
-      </html>
-    `);
   };
 
   const handleLogout = () => {
@@ -384,18 +399,20 @@ export default function ResumesPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handlePreviewResume(resume)}
-                          title="Preview Resume"
+                          onClick={() => handleViewPDF(resume)}
+                          title="View PDF"
+                          className="text-green-600 hover:text-green-700"
                         >
-                          <Eye className="h-4 w-4" />
+                          <FileImage className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDownloadResume(resume)}
-                          title="Download .tex File"
+                          onClick={() => handleDownloadPDF(resume)}
+                          title="Download PDF"
+                          className="text-blue-600 hover:text-blue-700"
                         >
-                          <Download className="h-4 w-4" />
+                          <FileDown className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -412,7 +429,7 @@ export default function ResumesPage() {
                   <CardContent>
                     <div className="bg-gray-50 p-3 rounded-md">
                       <p className="text-sm text-gray-600 font-mono">
-                        LaTeX format • {resume.content.length} characters • Professional template
+                        Professional Resume • {resume.content.length} characters • PDF Ready
                       </p>
                     </div>
                   </CardContent>

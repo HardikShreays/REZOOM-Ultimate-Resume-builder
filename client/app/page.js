@@ -4,6 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, FileText, Zap, Shield, Users, Star, CheckCircle } from "lucide-react";
 import Link from 'next/link';
 
+export const metadata = {
+  title: "REZOOM - Build Your Perfect Resume | AI-Powered Resume Builder",
+  description: "Create ATS-friendly, professional resumes in minutes with REZOOM. AI-powered resume builder that helps you land your dream job.",
+};
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
