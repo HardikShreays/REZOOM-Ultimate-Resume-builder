@@ -1158,9 +1158,11 @@ export default function ProfilePage() {
             <p className="text-gray-600 mb-6">
               All your information is organized and ready to create a professional resume
             </p>
-            <Button size="lg" className="px-8">
-              Generate Resume
-            </Button>
+            <Link href="/dashboard/resumes">
+              <Button size="lg" className="px-8">
+                Generate Resume
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
