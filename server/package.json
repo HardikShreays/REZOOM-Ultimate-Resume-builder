@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js",
-    "build": "npx prisma generate && npx prisma migrate deploy && npx prisma migrate status",
+    "start": "npx prisma migrate deploy && node index.js",
+    "build": "npx prisma generate && npx prisma migrate deploy && echo 'Migration Status:' && npx prisma migrate status",
     "migrate": "npx prisma migrate deploy",
     "db-push": "npx prisma db push",
     "postbuild": "npx prisma generate",
