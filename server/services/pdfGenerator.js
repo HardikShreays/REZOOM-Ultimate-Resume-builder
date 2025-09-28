@@ -4,27 +4,31 @@ const path = require('path');
 
 class PDFGenerator {
   constructor() {
-    this.outputDir = path.join(__dirname, '../temp');
+    // Use /tmp directory for Vercel serverless environment
+    this.outputDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../temp');
     this.ensureOutputDir();
   }
 
   ensureOutputDir() {
     if (!fs.existsSync(this.outputDir)) {
-      fs.mkdirSync(this.outputDir, { recursive: true });
+      try {
+        fs.mkdirSync(this.outputDir, { recursive: true });
+      } catch (error) {
+        // If we can't create the directory, use /tmp as fallback
+        this.outputDir = '/tmp';
+        console.log('Using /tmp directory for PDF generation');
+      }
     }
   }
 
   async generatePDFFromLaTeX(latexContent, filename = 'resume') {
+    let browser;
     try {
-      // Create temporary HTML file with LaTeX rendering
+      // Create HTML content with LaTeX rendering
       const htmlContent = this.createHTMLWithLaTeX(latexContent);
-      const tempHtmlPath = path.join(this.outputDir, `${filename}.html`);
-      
-      // Write HTML file
-      fs.writeFileSync(tempHtmlPath, htmlContent);
 
       // Generate PDF using Puppeteer
-      const browser = await puppeteer.launch({
+      browser = await puppeteer.launch({
         headless: true,
         args: [
           '--no-sandbox',
@@ -47,8 +51,8 @@ class PDFGenerator {
         deviceScaleFactor: 1
       });
 
-      // Load the HTML file
-      await page.goto(`file://${tempHtmlPath}`, {
+      // Set content directly instead of using file:// protocol
+      await page.setContent(htmlContent, {
         waitUntil: 'networkidle0'
       });
 
@@ -66,14 +70,20 @@ class PDFGenerator {
 
       await browser.close();
 
-      // Clean up temporary HTML file
-      fs.unlinkSync(tempHtmlPath);
-
       return pdfBuffer;
 
     } catch (error) {
       console.error('PDF generation error:', error);
       throw new Error('Failed to generate PDF');
+    } finally {
+      // Ensure browser is closed even if an error occurs
+      if (browser) {
+        try {
+          await browser.close();
+        } catch (closeError) {
+          console.error('Error closing browser:', closeError);
+        }
+      }
     }
   }
 
