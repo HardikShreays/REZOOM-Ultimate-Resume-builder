@@ -560,6 +560,34 @@ router.delete('/resumes/:id', requireAuth, async (req, res) => {
   }
 });
 
+// Handle OPTIONS request for CORS preflight
+router.options('/resumes/:id/pdf', (req, res) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL,
+    process.env.NEXT_PUBLIC_FRONTEND_URL,
+    /\.vercel\.app$/, // Allow all Vercel deployments
+    /\.netlify\.app$/  // Allow Netlify deployments
+  ].filter(Boolean);
+  
+  const isAllowed = allowedOrigins.some(allowedOrigin => {
+    if (typeof allowedOrigin === 'string') {
+      return origin === allowedOrigin;
+    } else if (allowedOrigin instanceof RegExp) {
+      return allowedOrigin.test(origin);
+    }
+    return false;
+  });
+  
+  res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.status(200).end();
+});
+
 // Generate PDF from resume
 router.get('/resumes/:id/pdf', requireAuth, async (req, res) => {
   console.log('api hit')
@@ -621,6 +649,34 @@ router.get('/resumes/:id/pdf', requireAuth, async (req, res) => {
     console.error('PDF generation error:', err);
     return res.status(500).json({ message: 'Failed to generate PDF' });
   }
+});
+
+// Handle OPTIONS request for CORS preflight
+router.options('/resumes/pdf', (req, res) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL,
+    process.env.NEXT_PUBLIC_FRONTEND_URL,
+    /\.vercel\.app$/, // Allow all Vercel deployments
+    /\.netlify\.app$/  // Allow Netlify deployments
+  ].filter(Boolean);
+  
+  const isAllowed = allowedOrigins.some(allowedOrigin => {
+    if (typeof allowedOrigin === 'string') {
+      return origin === allowedOrigin;
+    } else if (allowedOrigin instanceof RegExp) {
+      return allowedOrigin.test(origin);
+    }
+    return false;
+  });
+  
+  res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.status(200).end();
 });
 
 // Generate PDF from LaTeX content directly

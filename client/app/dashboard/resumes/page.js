@@ -135,45 +135,23 @@ export default function ResumesPage() {
 
   const handleViewPDF = async (resume) => {
     try {
-      // Get the API base URL from the environment or use default
-      const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      const pdfUrl = `${baseURL}/profile/resumes/${resume.id}/pdf`;
+      // Use the same API service that handles CORS properly
+      const response = await api.get(`/profile/resumes/${resume.id}/pdf`, {
+        responseType: 'blob'
+      });
       
-      // Create a temporary link to handle authentication
-      const token = localStorage.getItem('token');
-      if (token) {
-        // Open PDF with authentication
-        const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.target = '_blank';
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        
-        // Add authorization header via fetch
-        fetch(pdfUrl, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }).then(response => {
-          if (response.ok) {
-            response.blob().then(blob => {
-              const url = window.URL.createObjectURL(blob);
-              window.open(url, '_blank');
-              window.URL.revokeObjectURL(url);
-            });
-          } else {
-            setError('Failed to load PDF');
-          }
-        }).catch(err => {
-          console.log(err)
-          setError('Failed to open PDF preview');
-        });
-        
-        document.body.removeChild(link);
-      } else {
-        window.open(pdfUrl, '_blank');
-      }
+      // Create blob URL and open in new tab
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      
+      // Clean up the URL after a delay
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
+      
     } catch (err) {
+      console.error('PDF view error:', err);
       setError('Failed to open PDF preview');
     }
   };
