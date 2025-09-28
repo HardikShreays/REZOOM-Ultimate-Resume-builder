@@ -585,6 +585,30 @@ router.get('/resumes/:id/pdf', requireAuth, async (req, res) => {
 
     const pdfGenerator = new PDFGenerator();
     const pdfBuffer = await pdfGenerator.generatePDFFromLaTeX(resume.content, `resume_${resumeId}`);
+    // Set CORS headers for PDF - use the same logic as main CORS config
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      process.env.FRONTEND_URL,
+      process.env.NEXT_PUBLIC_FRONTEND_URL,
+      /\.vercel\.app$/, // Allow all Vercel deployments
+      /\.netlify\.app$/  // Allow Netlify deployments
+    ].filter(Boolean);
+    
+    // Check if origin is allowed (same logic as main CORS)
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
     // Set headers for PDF download with user name
     const filename = `Resume-${resume.user.name.replace(/[^a-z0-9]/gi, '_')}.pdf`;
@@ -610,6 +634,31 @@ router.post('/resumes/pdf', requireAuth, async (req, res) => {
 
     const pdfGenerator = new PDFGenerator();
     const pdfBuffer = await pdfGenerator.generatePDFFromLaTeX(latexContent, 'temp_resume');
+    
+    // Set CORS headers for PDF - use the same logic as main CORS config
+    const origin = req.headers.origin;
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      process.env.FRONTEND_URL,
+      process.env.NEXT_PUBLIC_FRONTEND_URL,
+      /\.vercel\.app$/, // Allow all Vercel deployments
+      /\.netlify\.app$/  // Allow Netlify deployments
+    ].filter(Boolean);
+    
+    // Check if origin is allowed (same logic as main CORS)
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
     // Set headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
