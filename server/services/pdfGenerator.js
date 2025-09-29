@@ -31,34 +31,42 @@ class PDFGenerator {
       // Generate PDF using Puppeteer with serverless-compatible chromium
       const isProduction = process.env.NODE_ENV === 'production';
       
-      browser = await puppeteer.launch({
+      const launchArgs = isProduction 
+        ? [
+            ...chromium.args,
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+          ]
+        : [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process',
+            '--disable-gpu'
+          ];
+
+      const launchOptions = {
         headless: true,
-        args: isProduction 
-          ? [
-              ...chromium.args,
-              '--no-sandbox',
-              '--disable-setuid-sandbox',
-              '--disable-dev-shm-usage',
-              '--disable-accelerated-2d-canvas',
-              '--no-first-run',
-              '--no-zygote',
-              '--single-process',
-              '--disable-gpu'
-            ]
-          : [
-              '--no-sandbox',
-              '--disable-setuid-sandbox',
-              '--disable-dev-shm-usage',
-              '--disable-accelerated-2d-canvas',
-              '--no-first-run',
-              '--no-zygote',
-              '--single-process',
-              '--disable-gpu'
-            ],
-        executablePath: isProduction 
-          ? await chromium.executablePath() 
-          : undefined
-      });
+        args: launchArgs
+      };
+
+      if (isProduction) {
+        launchOptions.executablePath = await chromium.executablePath();
+      } else {
+        // Use the locally installed Chrome with puppeteer-core
+        launchOptions.channel = 'chrome';
+      }
+      
+      browser = await puppeteer.launch(launchOptions);
 
       const page = await browser.newPage();
       
@@ -233,10 +241,24 @@ class PDFGenerator {
     
     let html = latexContent;
     
-    // Remove LaTeX document structure
+    // Strip LaTeX comments (ignore escaped \%)
+    html = html.replace(/(^|[^\\])%.*$/gm, '$1');
+    
+    // Remove LaTeX document structure and preamble commands
     html = html.replace(/\\documentclass\{.*?\}/g, '');
-    html = html.replace(/\\usepackage\{.*?\}/g, '');
-    html = html.replace(/\\newcommand\{.*?\}/g, '');
+    html = html.replace(/\\usepackage(?:\[[^\]]*\])?\{[^}]*\}/g, '');
+    // Remove newcommand definitions like \newcommand{\tab}[1]{...}
+    html = html.replace(/\\newcommand\s*\{[^}]*\}\s*(?:\[[^\]]*\])?\s*\{[^}]*\}/g, '');
+    
+    // Remove common layout commands that don't translate to HTML
+    html = html.replace(/\\vspace\{[^}]*\}/g, '');
+    html = html.replace(/\\hfill/g, '');
+    html = html.replace(/\\hrule/g, '');
+    
+    // Clean up leftover helper macro bodies (rare): lines containing only {\hspace...}
+    html = html.replace(/^\{\\hspace[^}]*\}$/gm, '');
+
+    // Heading info
     html = html.replace(/\\name\{([^}]+)\}/g, '<div class="resume-header"><h1>$1</h1>');
     html = html.replace(/\\address\{([^}]+)\}/g, '<p>$1</p></div>');
     html = html.replace(/\\begin\{document\}/g, '');
@@ -254,35 +276,31 @@ class PDFGenerator {
     // Convert items
     html = html.replace(/\\item\s+(.+)/g, '<div class="item-description">• $1</div>');
     
-    // Convert bold text
+    // Convert bold/italic
     html = html.replace(/\\textbf\{([^}]+)\}/g, '<strong>$1</strong>');
     html = html.replace(/\\bf\s+([^{]+)/g, '<strong>$1</strong>');
-    
-    // Convert italic text
     html = html.replace(/\\textit\{([^}]+)\}/g, '<em>$1</em>');
     html = html.replace(/\\em\s+([^{]+)/g, '<em>$1</em>');
     
-    // Convert tables
-    html = html.replace(/\\begin\{tabular\}\s*\{[^}]*\}([\s\S]*?)\\end\{tabular\}/g, (match, content) => {
-        // Normalize line breaks and remove trailing row terminators
-        const normalized = content
-          .replace(/\n+/g, '\n')
-          .trim();
-        
-        // Split into rows by LaTeX row separator (two backslashes)
-        const rows = normalized.split(/\\\\\s*/).map(r => r.trim()).filter(Boolean);
-        if (rows.length === 0) {
-          return '<table class="skills-table"></table>';
-        }
-        
-        const trs = rows.map(row => {
-          // Split columns by '&'
-          const cols = row.split(/\s*&\s*/).map(c => c.trim());
-          const tds = cols.map(c => `<td>${c}</td>`).join('');
-          return `<tr>${tds}</tr>`;
-        }).join('');
-        
-        return `<table class="skills-table">${trs}</table>`;
+    // Convert tabular blocks robustly (handle column specs/newlines)
+    html = html.replace(/\\begin\{tabular\}([\s\S]*?)\\end\{tabular\}/g, (match, inner) => {
+      let content = inner;
+      // Remove column spec if present: starts with { ... }
+      if (content.trim().startsWith('{')) {
+        const idx = content.indexOf('}');
+        if (idx !== -1) content = content.slice(idx + 1);
+      }
+      // Normalize whitespace
+      content = content.replace(/\r?\n+/g, '\n').trim();
+      // Split into rows by \\ (two backslashes)
+      const rowList = content.split(/\\\\\s*/).map(r => r.trim()).filter(Boolean);
+      if (rowList.length === 0) return '<table class="skills-table"></table>';
+      const trs = rowList.map(row => {
+        const cols = row.split(/\s*&\s*/).map(c => c.trim()).filter(Boolean);
+        const tds = cols.map(c => `<td>${c}</td>`).join('');
+        return `<tr>${tds}</tr>`;
+      }).join('');
+      return `<table class="skills-table">${trs}</table>`;
     });
     
     // Convert href links
@@ -293,7 +311,7 @@ class PDFGenerator {
     html = html.replace(/\n\s*\n/g, '<br><br>');
     html = html.replace(/\n/g, ' ');
     
-    // Clean up extra spaces
+    // Collapse extra spaces
     html = html.replace(/\s+/g, ' ');
     
     return html;
