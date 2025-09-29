@@ -34,6 +34,7 @@ export default function ResumesPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
+  const [openPdf, setopenPdf] = useState(false)
 
   const templates = [
     {
@@ -134,6 +135,9 @@ export default function ResumesPage() {
 
 
   const handleViewPDF = async (resume) => {
+    setopenPdf(true);
+    setError(''); // Clear any previous errors
+    
     try {
       // Use the same API service that handles CORS properly
       const response = await api.get(`/profile/resumes/${resume.id}/pdf`, {
@@ -153,6 +157,9 @@ export default function ResumesPage() {
     } catch (err) {
       console.error('PDF view error:', err);
       setError('Failed to open PDF preview');
+    } finally {
+      // Always reset the loading state
+      setopenPdf(false);
     }
   };
 
@@ -238,6 +245,14 @@ export default function ResumesPage() {
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
             {error}
+          </div>
+        )}
+        
+        {/* PDF Opening Notification */}
+        {openPdf && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-600 px-4 py-3 rounded-md text-sm flex items-center">
+            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            Opening PDF preview...
           </div>
         )}
 
