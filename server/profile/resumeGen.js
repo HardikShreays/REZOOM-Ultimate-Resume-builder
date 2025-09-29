@@ -60,7 +60,16 @@ function generateResumeContent(user, template = 'ats-friendly') {
   const getSkillsSection = () => {
     if (!user.skills || user.skills.length === 0) return '';
     
-    const technicalSkills = user.skills.filter(s => 
+    // Deduplicate skills by case-insensitive name
+    const uniqueSkillsMap = new Map();
+    for (const skill of user.skills) {
+      const key = (skill && skill.name ? skill.name : '').toString().trim().toLowerCase();
+      if (!key) continue;
+      if (!uniqueSkillsMap.has(key)) uniqueSkillsMap.set(key, skill);
+    }
+    const skills = Array.from(uniqueSkillsMap.values());
+
+    const technicalSkills = skills.filter(s => 
       ['Expert', 'Advanced', 'Intermediate'].includes(s.proficiency)
     ).map(s => escapeLaTeX(s.name)).join(', ');
     
@@ -73,9 +82,9 @@ Technical Skills & ${technicalSkills || 'Various programming languages and frame
 \\\\
 Soft Skills & ${softSkills.join(', ')}
 \\\\
-Tools & ${user.skills.filter(s => s.proficiency === 'Intermediate' || s.proficiency === 'Advanced').map(s => escapeLaTeX(s.name)).join(', ') || 'Various development tools'}
+Tools & ${skills.filter(s => s.proficiency === 'Intermediate' || s.proficiency === 'Advanced').map(s => escapeLaTeX(s.name)).join(', ') || 'Various development tools'}
 \\\\
-\\end{tabular}\\\\
+\\end{tabular}\\
 \\end{rSection}`;
   };
 
@@ -83,9 +92,18 @@ Tools & ${user.skills.filter(s => s.proficiency === 'Intermediate' || s.proficie
   const getExperienceSection = () => {
     if (!user.experiences || user.experiences.length === 0) return '';
     
+    // Deduplicate experiences by company+role+date+description
+    const uniqueMap = new Map();
+    for (const exp of user.experiences) {
+      const key = [exp.company, exp.role, exp.startDate, exp.endDate, exp.description]
+        .map(v => (v || '').toString().trim().toLowerCase()).join('|');
+      if (!uniqueMap.has(key)) uniqueMap.set(key, exp);
+    }
+    const experiences = Array.from(uniqueMap.values());
+    
     return `\\begin{rSection}{EXPERIENCE}
 
-${user.experiences.map(exp => `
+${experiences.map(exp => `
 \\begin{rSubsection}{${escapeLaTeX(exp.company)}}{${formatDateRange(exp.startDate, exp.endDate)}}{${escapeLaTeX(exp.role)}}{}
 \\item ${escapeLaTeX(exp.description)}
 ${exp.technologies ? `\\item Technologies: ${escapeLaTeX(exp.technologies)}` : ''}
@@ -98,9 +116,18 @@ ${exp.technologies ? `\\item Technologies: ${escapeLaTeX(exp.technologies)}` : '
   const getEducationSection = () => {
     if (!user.educations || user.educations.length === 0) return '';
     
+    // Deduplicate educations by degree+institution+years+description
+    const uniqueMap = new Map();
+    for (const edu of user.educations) {
+      const key = [edu.degree, edu.institution, edu.startYear, edu.endYear, edu.description]
+        .map(v => (v || '').toString().trim().toLowerCase()).join('|');
+      if (!uniqueMap.has(key)) uniqueMap.set(key, edu);
+    }
+    const educations = Array.from(uniqueMap.values());
+    
     return `\\begin{rSection}{Education}
 
-${user.educations.map(edu => `
+${educations.map(edu => `
 {\\bf ${escapeLaTeX(edu.degree)}}, ${escapeLaTeX(edu.institution)} \\hfill {${edu.startYear} - ${edu.endYear || 'Present'}}\\\\
 ${edu.description ? `Relevant Coursework: ${escapeLaTeX(edu.description)}.` : ''}
 `).join('\n')}
@@ -111,9 +138,18 @@ ${edu.description ? `Relevant Coursework: ${escapeLaTeX(edu.description)}.` : ''
   const getProjectsSection = () => {
     if (!user.projects || user.projects.length === 0) return '';
     
+    // Deduplicate projects by title+description+links
+    const uniqueMap = new Map();
+    for (const project of user.projects) {
+      const key = [project.title, project.description, project.githubUrl, project.liveUrl]
+        .map(v => (v || '').toString().trim().toLowerCase()).join('|');
+      if (!uniqueMap.has(key)) uniqueMap.set(key, project);
+    }
+    const projects = Array.from(uniqueMap.values());
+    
     return `\\begin{rSection}{PROJECTS}
 \\vspace{-1.25em}
-${user.projects.map(project => `
+${projects.map(project => `
 \\item \\textbf{${escapeLaTeX(project.title)}.} {${escapeLaTeX(project.description)} ${project.githubUrl ? `\\href{${escapeLaTeX(project.githubUrl)}}{(GitHub)}` : ''} ${project.liveUrl ? `\\href{${escapeLaTeX(project.liveUrl)}}{(Live Demo)}` : ''}}
 `).join('')}
 \\end{rSection}`;
@@ -123,11 +159,19 @@ ${user.projects.map(project => `
   const getCertificationsSection = () => {
     if (!user.certifications || user.certifications.length === 0) return '';
     
+    // Deduplicate certifications by title+issuer+credentialId
+    const uniqueMap = new Map();
+    for (const cert of user.certifications) {
+      const key = [cert.title, cert.issuer, cert.credentialId]
+        .map(v => (v || '').toString().trim().toLowerCase()).join('|');
+      if (!uniqueMap.has(key)) uniqueMap.set(key, cert);
+    }
+    const certifications = Array.from(uniqueMap.values());
+    
     return `\\begin{rSection}{Certifications}
 \\begin{itemize}
-${user.certifications.map(cert => `
-    \\item \\textbf{${escapeLaTeX(cert.title)}} - ${escapeLaTeX(cert.issuer)} (${formatDate(cert.issueDate)}${cert.expiryDate ? ` - ${formatDate(cert.expiryDate)}` : ''})
-    ${cert.credentialId ? `\\item Credential ID: ${escapeLaTeX(cert.credentialId)}` : ''}
+${certifications.map(cert => `
+    \\item \\textbf{${escapeLaTeX(cert.title)}} - ${escapeLaTeX(cert.issuer)} (${formatDate(cert.issueDate)}${cert.expiryDate ? ` - ${formatDate(cert.expiryDate)}` : ''})${cert.credentialId ? ` \\newline Credential ID: ${escapeLaTeX(cert.credentialId)}` : ''}
 `).join('')}
 \\end{itemize}
 \\end{rSection}`;
@@ -135,7 +179,10 @@ ${user.certifications.map(cert => `
 
   // Generate objective based on user data
   const getObjective = () => {
-    const experienceYears = user.experiences ? user.experiences.length : 0;
+    const experienceYears = user.experiences 
+      ? new Set(user.experiences.map(e => [e.company, e.role, e.startDate, e.endDate, e.description]
+          .map(v => (v || '').toString().trim().toLowerCase()).join('|'))).size 
+      : 0;
     const topSkills = user.skills ? user.skills
       .filter(s => s.proficiency === 'Expert' || s.proficiency === 'Advanced')
       .map(s => s.name)

@@ -263,9 +263,25 @@ class PDFGenerator {
     html = html.replace(/\\em\s+([^{]+)/g, '<em>$1</em>');
     
     // Convert tables
-    html = html.replace(/\\begin\{tabular\}.*?\\end\{tabular\}/gs, (match) => {
-        const rows = match.match(/\\\\/g) || [];
-        return '<table class="skills-table"><tr><td>Skills</td><td>Content</td></tr></table>';
+    html = html.replace(/\\begin\{tabular\}\s*\{[^}]*\}([\s\S]*?)\\end\{tabular\}/g, (match, content) => {
+        // Normalize line breaks and remove trailing \\
+        const normalized = content
+          .replace(/\n+/g, '\n')
+          .trim();
+        
+        // Split into rows by \\\n        const rows = normalized.split(/\\\\\s*/).map(r => r.trim()).filter(Boolean);
+        if (rows.length === 0) {
+          return '<table class="skills-table"></table>';
+        }
+        
+        const trs = rows.map(row => {
+          // Split columns by &
+          const cols = row.split(/\s*&\s*/).map(c => c.trim());
+          const tds = cols.map(c => `<td>${c}</td>`).join('');
+          return `<tr>${tds}</tr>`;
+        }).join('');
+        
+        return `<table class="skills-table">${trs}</table>`;
     });
     
     // Convert href links
