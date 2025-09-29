@@ -17,12 +17,13 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.16.2",
+    "@sparticuz/chromium": "^131.0.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "puppeteer": "^24.22.0",
+    "puppeteer-core": "^24.22.0",
     "pg": "^8.11.3"
   },
   "devDependencies": {

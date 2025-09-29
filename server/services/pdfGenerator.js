@@ -1,4 +1,5 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 const fs = require('fs');
 const path = require('path');
 
@@ -27,19 +28,36 @@ class PDFGenerator {
       // Create HTML content with LaTeX rendering
       const htmlContent = this.createHTMLWithLaTeX(latexContent);
 
-      // Generate PDF using Puppeteer
+      // Generate PDF using Puppeteer with serverless-compatible chromium
+      const isProduction = process.env.NODE_ENV === 'production';
+      
       browser = await puppeteer.launch({
         headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu'
-        ]
+        args: isProduction 
+          ? [
+              ...chromium.args,
+              '--no-sandbox',
+              '--disable-setuid-sandbox',
+              '--disable-dev-shm-usage',
+              '--disable-accelerated-2d-canvas',
+              '--no-first-run',
+              '--no-zygote',
+              '--single-process',
+              '--disable-gpu'
+            ]
+          : [
+              '--no-sandbox',
+              '--disable-setuid-sandbox',
+              '--disable-dev-shm-usage',
+              '--disable-accelerated-2d-canvas',
+              '--no-first-run',
+              '--no-zygote',
+              '--single-process',
+              '--disable-gpu'
+            ],
+        executablePath: isProduction 
+          ? await chromium.executablePath() 
+          : undefined
       });
 
       const page = await browser.newPage();
