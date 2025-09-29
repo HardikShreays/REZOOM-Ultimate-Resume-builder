@@ -264,18 +264,19 @@ class PDFGenerator {
     
     // Convert tables
     html = html.replace(/\\begin\{tabular\}\s*\{[^}]*\}([\s\S]*?)\\end\{tabular\}/g, (match, content) => {
-        // Normalize line breaks and remove trailing \\
+        // Normalize line breaks and remove trailing row terminators
         const normalized = content
           .replace(/\n+/g, '\n')
           .trim();
         
-        // Split into rows by \\\n        const rows = normalized.split(/\\\\\s*/).map(r => r.trim()).filter(Boolean);
+        // Split into rows by LaTeX row separator (two backslashes)
+        const rows = normalized.split(/\\\\\s*/).map(r => r.trim()).filter(Boolean);
         if (rows.length === 0) {
           return '<table class="skills-table"></table>';
         }
         
         const trs = rows.map(row => {
-          // Split columns by &
+          // Split columns by '&'
           const cols = row.split(/\s*&\s*/).map(c => c.trim());
           const tds = cols.map(c => `<td>${c}</td>`).join('');
           return `<tr>${tds}</tr>`;
