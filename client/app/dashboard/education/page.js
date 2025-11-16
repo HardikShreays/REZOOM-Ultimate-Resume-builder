@@ -6,14 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  User, 
-  LogOut, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  ArrowLeft,
+import { DashboardShell } from "@/components/dashboard/shell";
+import {
+  Plus,
+  Edit,
+  Trash2,
   Calendar,
   GraduationCap,
   MapPin,
@@ -211,224 +208,187 @@ export default function EducationPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <DashboardShell user={user} onLogout={handleLogout} backHref="/dashboard" backLabel="Dashboard">
+        <div className="flex h-[60vh] flex-col.items-center justify-center gap-4 text-foreground/60">
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-border/60 border-t-primary" />
+          <p className="text-[12px] uppercase tracking-[0.3em]">Gathering academic history</p>
         </div>
-      </div>
+      </DashboardShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => router.push('/dashboard')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div className="flex items-center space-x-2">
-                <FileText className="h-8 w-8 text-blue-600" />
-                <span className="text-2xl font-bold text-gray-900">REZOOM</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-gray-600" />
-                <span className="text-gray-700">{user?.name}</span>
-              </div>
-              <Button variant="ghost" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+    <DashboardShell user={user} onLogout={handleLogout} backHref="/dashboard" backLabel="Dashboard">
+      <div className="space-y-12">
+        <section className="grid gap-12 lg:grid-cols-[0.8fr,1.2fr]">
+          <div className="space-y-6">
+            <Badge className="border-border/60 bg-accent/70 text-foreground/60">Academic record</Badge>
+            <h1 className="font-serif text-[clamp(2.6rem,4vw,3.6rem)] leading-[1.05]">
+              Chronicle your education with the polish of an admissions dossier.
+            </h1>
+            <p className="max-w-md text-[15px] leading-8 text-foreground/70">
+              Highlight programs, honors, and research. A structured academic timeline signals credibility and sets up
+              your professional narrative.
+            </p>
+            <Button size="lg" className="w-full max-w-xs justify-center" onClick={() => setShowForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add education
+            </Button>
           </div>
-        </div>
-      </nav>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Education</h1>
-          <p className="text-gray-600">Manage your educational background</p>
-        </div>
-
-        {/* Add Education Button */}
-        <div className="mb-6">
-          <Button 
-            onClick={() => setShowForm(true)}
-            className="flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Education
-          </Button>
-        </div>
-
-        {/* Education Form */}
-        {showForm && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>
-                {editingEducation ? 'Edit Education' : 'Add Education'}
-              </CardTitle>
-              <CardDescription>
-                Fill in your educational background details
+          <Card className="border border-border/70 bg-card/90">
+            <CardHeader className="space-y-4">
+              <CardTitle className="font-serif text-3xl">What to capture</CardTitle>
+              <CardDescription className="text-[15px] leading-7 text-foreground/70">
+                Admissions teams look for consistency, specialization, and impact. Translate coursework, research, and
+                leadership roles into crisp talking points recruiters can trust.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4 pb-10 text-[12px] uppercase tracking-[0.24em] text-foreground/60">
+              <p className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-primary" /> Include thesis topics or concentrations that match the
+                role.
+              </p>
+              <p className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" /> Add timelines and honors to show sustained excellence.
+              </p>
+              <p className="flex items-center gap-2">
+                <Award className="h-4 w-4 text-primary" /> Mention scholarships, fellowships, or leadership recognition.
+              </p>
+            </CardContent>
+          </Card>
+        </section>
+
+        {showForm && (
+          <Card className="border border-border/70 bg-card/90">
+            <CardHeader className="space-y-3">
+              <CardTitle className="font-serif text-2xl">
+                {editingEducation ? 'Update education' : 'Add a new education entry'}
+              </CardTitle>
+              <CardDescription className="text-[15px] leading-7 text-foreground/70">
+                Detail the program, institution, and achievements that made the experience matter.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pb-10">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                  <div className="rounded-3xl border border-destructive/30 bg-destructive/10 px-5 py-4 text-sm text-destructive">
                     {error}
                   </div>
                 )}
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="degree" className="text-sm font-medium text-gray-700">
-                      Degree/Qualification *
-                    </label>
-                    <div className="relative">
-                      <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="degree"
-                        name="degree"
-                        value={formData.degree}
-                        onChange={handleChange}
-                        onFocus={() => setShowDegreeDropdown(true)}
-                        placeholder="e.g., Bachelor of Computer Science, MBA, PhD in Physics"
-                        required
-                        className="pl-10 pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowDegreeDropdown(!showDegreeDropdown)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        <ChevronDown className="h-4 w-4" />
-                      </button>
-                      {showDegreeDropdown && (
-                        <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
-                          {popularDegrees
-                            .filter(degree => 
-                              degree.toLowerCase().includes(formData.degree.toLowerCase())
-                            )
-                            .map((degree, index) => (
-                              <button
-                                key={index}
-                                type="button"
-                                onClick={() => handleDegreeSelect(degree)}
-                                className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                              >
-                                {degree}
-                              </button>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="institution" className="text-sm font-medium text-gray-700">
-                      Institution *
-                    </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="institution"
-                        name="institution"
-                        value={formData.institution}
-                        onChange={handleChange}
-                        placeholder="e.g., Stanford University, MIT, Harvard Business School"
-                        required
-                        className="pl-10"
-                      />
-                    </div>
+                <div className="space-y-3" onClick={() => setShowDegreeDropdown((prev) => !prev)}>
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70">
+                    Degree*
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="degree"
+                      name="degree"
+                      value={formData.degree}
+                      onChange={handleChange}
+                      placeholder="e.g., Master of Computer Science"
+                      required
+                      readOnly
+                      className="cursor-pointer pr-12"
+                    />
+                    <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+                    {showDegreeDropdown && (
+                      <div className="absolute z-10 mt-2 max-h-60 w-full overflow-y-auto rounded-3xl border border-border/70 bg-card shadow-xl">
+                        {popularDegrees.map((degree) => (
+                          <button
+                            key={degree}
+                            type="button"
+                            onClick={() => handleDegreeSelect(degree)}
+                            className="flex w-full items-center justify-between px-5 py-3 text-left text-[13px] uppercase tracking-[0.24em] text-foreground/70 transition hover:bg-accent/60"
+                          >
+                            {degree}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="startYear" className="text-sm font-medium text-gray-700">
-                      Start Year *
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="startYear"
-                        name="startYear"
-                        type="number"
-                        min="1950"
-                        max="2030"
-                        value={formData.startYear}
-                        onChange={handleChange}
-                        placeholder="2020"
-                        required
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
+                <div className="space-y-3">
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="institution">
+                    Institution*
+                  </label>
+                  <Input
+                    id="institution"
+                    name="institution"
+                    value={formData.institution}
+                    onChange={handleChange}
+                    placeholder="University name"
+                    required
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="endYear" className="text-sm font-medium text-gray-700">
-                      End Year
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="startYear">
+                      Start year*
                     </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="endYear"
-                        name="endYear"
-                        type="number"
-                        min="1950"
-                        max="2030"
-                        value={formData.endYear}
-                        onChange={handleChange}
-                        placeholder="2024"
-                        disabled={formData.isCurrent}
-                        className="pl-10"
-                      />
-                    </div>
+                    <Input
+                      id="startYear"
+                      name="startYear"
+                      type="number"
+                      value={formData.startYear}
+                      onChange={handleChange}
+                      placeholder="2019"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="endYear">
+                      End year
+                    </label>
+                    <Input
+                      id="endYear"
+                      name="endYear"
+                      type="number"
+                      value={formData.endYear}
+                      onChange={handleChange}
+                      placeholder="2023"
+                      disabled={formData.isCurrent}
+                    />
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-3">
                   <input
                     id="isCurrent"
                     name="isCurrent"
                     type="checkbox"
                     checked={formData.isCurrent}
                     onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                   />
-                  <label htmlFor="isCurrent" className="text-sm font-medium text-gray-700">
-                    I am currently studying here
+                  <label className="text-[12px] uppercase tracking-[0.24em] text-foreground/70" htmlFor="isCurrent">
+                    I currently attend this program
                   </label>
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="description" className="text-sm font-medium text-gray-700">
-                    Additional Details (Optional)
+                <div className="space-y-3">
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="description">
+                    Key achievements
                   </label>
                   <textarea
                     id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    placeholder="Relevant coursework, honors, achievements, GPA, thesis topic, etc."
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Highlight coursework, leadership, research, or awards."
+                    rows={5}
+                    className="w-full rounded-3xl border border-border/70 bg-transparent px-6 py-4 text-sm leading-relaxed text-foreground/80 placeholder:text-foreground/40 focus-visible:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </div>
 
-                <div className="flex space-x-4">
-                  <Button type="submit" disabled={submitting}>
-                    {submitting ? 'Saving...' : (editingEducation ? 'Update Education' : 'Add Education')}
+                <div className="flex flex-wrap gap-3">
+                  <Button type="submit" disabled={submitting} className="px-7">
+                    {submitting ? 'Saving' : editingEducation ? 'Update education' : 'Add education'}
                   </Button>
-                  <Button type="button" variant="outline" onClick={resetForm}>
+                  <Button type="button" variant="outline" onClick={resetForm} className="px-7">
                     Cancel
                   </Button>
                 </div>
@@ -437,77 +397,87 @@ export default function EducationPage() {
           </Card>
         )}
 
-        {/* Education List */}
-        <div className="space-y-6">
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl">Academic timeline</h2>
+              <p className="text-[14px] leading-7 text-foreground/60">
+                {educations.length
+                  ? 'Refine entries to underscore relevance for your next role.'
+                  : 'Once you add education entries, they will appear here with quick edit controls.'}
+              </p>
+            </div>
+            {educations.length > 0 && (
+              <Button variant="outline" className="px-6" onClick={() => setShowForm(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add another
+              </Button>
+            )}
+          </div>
+
           {educations.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <GraduationCap className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No education added yet</h3>
-                <p className="text-gray-600 mb-4">Start building your educational profile by adding your degrees and qualifications</p>
-                <Button onClick={() => setShowForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Education
-                </Button>
+            <Card className="border border-dashed border-border/70 bg-card/80 text-center">
+              <CardContent className="py-12 text-[14px] uppercase tracking-[0.24em] text-foreground/60">
+                Build your academic timeline to strengthen credibility.
               </CardContent>
             </Card>
           ) : (
-            educations.map((education) => (
-              <Card key={education.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <span className="text-2xl">{getDegreeIcon(education.degree)}</span>
-                        <div>
-                          <CardTitle className="text-xl">{education.degree}</CardTitle>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <MapPin className="h-4 w-4 text-gray-500" />
-                            <span className="text-lg font-medium text-gray-700">{education.institution}</span>
-                          </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              {educations.map((education) => (
+                <Card key={education.id} className="border border-border/70 bg-card/90 transition hover:-translate-y-1 hover:shadow-xl">
+                  <CardHeader className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-2">
+                        <CardTitle className="font-serif text-xl text-foreground">{education.degree}</CardTitle>
+                        <p className="text-[13px] uppercase tracking-[0.24em] text-foreground/50">
+                          {education.institution}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-3 text-[12px] uppercase tracking-[0.24em] text-foreground/50">
+                          <span className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            {education.startYear} – {education.endYear ? education.endYear : 'Present'}
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            {getDegreeLevel(education.degree)} level
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {education.startYear} - {education.endYear || 'Present'}
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {getDegreeLevel(education.degree)}
-                        </Badge>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(education)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(education.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(education)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(education.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm leading-7 text-foreground/80">
+                    <div className="rounded-3xl border border-border/60 bg-card/80 px-5 py-4">
+                      <p className="whitespace-pre-wrap">{education.description || 'No additional details provided.'}</p>
                     </div>
-                  </div>
-                </CardHeader>
-                {education.description && (
-                  <CardContent>
-                    <div className="prose prose-sm max-w-none">
-                      <p className="text-gray-700 whitespace-pre-wrap">{education.description}</p>
+                    <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.24em] text-foreground/50">
+                      <span className="inline-flex items-center gap-2">
+                        <GraduationCap className="h-4 w-4" />
+                        {getDegreeIcon(education.degree)}
+                      </span>
+                      {education.isCurrent ? (
+                        <Badge className="rounded-full bg-primary/10 text-primary">Currently enrolled</Badge>
+                      ) : null}
                     </div>
                   </CardContent>
-                )}
-              </Card>
-            ))
+                </Card>
+              ))}
+            </div>
           )}
-        </div>
+        </section>
       </div>
-    </div>
+    </DashboardShell>
   );
 }

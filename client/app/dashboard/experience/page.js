@@ -1,27 +1,62 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  User, 
-  LogOut, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  ArrowLeft,
-  Calendar,
-  Building,
-  Briefcase,
-  MapPin,
-  Code,
-  X
-} from "lucide-react";
-import api from '@/services/api';
+import { DashboardShell } from "@/components/dashboard/shell";
+import { Plus, Edit, Trash2, Calendar, Building, Briefcase, Code, X } from "lucide-react";
+import api from "@/services/api";
+
+const TECHNOLOGY_LIBRARY = [
+  "React",
+  "Vue.js",
+  "Angular",
+  "Next.js",
+  "Nuxt.js",
+  "Node.js",
+  "Express",
+  "Django",
+  "Flask",
+  "Spring Boot",
+  "JavaScript",
+  "TypeScript",
+  "Python",
+  "Java",
+  "C#",
+  "PHP",
+  "Ruby",
+  "Go",
+  "Rust",
+  "Swift",
+  "HTML",
+  "CSS",
+  "Sass",
+  "Tailwind CSS",
+  "Bootstrap",
+  "MongoDB",
+  "PostgreSQL",
+  "MySQL",
+  "Redis",
+  "Firebase",
+  "AWS",
+  "Azure",
+  "Google Cloud",
+  "Docker",
+  "Kubernetes",
+  "Git",
+  "GitHub",
+  "GitLab",
+  "Jenkins",
+  "CI/CD",
+  "Figma",
+  "Adobe XD",
+  "Sketch",
+  "Photoshop",
+  "Illustrator",
+];
 
 export default function ExperiencePage() {
   const [user, setUser] = useState(null);
@@ -30,43 +65,31 @@ export default function ExperiencePage() {
   const [showForm, setShowForm] = useState(false);
   const [editingExperience, setEditingExperience] = useState(null);
   const [formData, setFormData] = useState({
-    company: '',
-    role: '',
-    startDate: '',
-    endDate: '',
-    description: '',
-    technologies: '',
-    isCurrent: false
+    company: "",
+    role: "",
+    startDate: "",
+    endDate: "",
+    description: "",
+    technologies: "",
+    isCurrent: false,
   });
   const [selectedTechs, setSelectedTechs] = useState([]);
-  const [techInput, setTechInput] = useState('');
+  const [techInput, setTechInput] = useState("");
   const [showTechDropdown, setShowTechDropdown] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const router = useRouter();
   const dropdownRef = useRef(null);
-
-  const popularTechs = [
-    'React', 'Vue.js', 'Angular', 'Next.js', 'Nuxt.js',
-    'Node.js', 'Express', 'Django', 'Flask', 'Spring Boot',
-    'JavaScript', 'TypeScript', 'Python', 'Java', 'C#',
-    'PHP', 'Ruby', 'Go', 'Rust', 'Swift',
-    'HTML', 'CSS', 'Sass', 'Tailwind CSS', 'Bootstrap',
-    'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'Firebase',
-    'AWS', 'Azure', 'Google Cloud', 'Docker', 'Kubernetes',
-    'Git', 'GitHub', 'GitLab', 'Jenkins', 'CI/CD',
-    'Figma', 'Adobe XD', 'Sketch', 'Photoshop', 'Illustrator'
-  ];
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await api.get('/auth/me');
+        const response = await api.get("/auth/me");
         setUser(response.data.user);
         await fetchExperiences();
       } catch (err) {
-        localStorage.removeItem('token');
-        router.push('/login');
+        localStorage.removeItem("token");
+        router.push("/login");
       } finally {
         setLoading(false);
       }
@@ -75,7 +98,6 @@ export default function ExperiencePage() {
     checkAuth();
   }, [router]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -83,39 +105,39 @@ export default function ExperiencePage() {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   const fetchExperiences = async () => {
     try {
-      const response = await api.get('/profile/experiences');
+      const response = await api.get("/profile/experiences");
       setExperiences(response.data.experiences);
     } catch (err) {
-      console.error('Failed to fetch experiences:', err);
+      console.error("Failed to fetch experiences:", err);
     }
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleTechAdd = (tech) => {
     if (tech && !selectedTechs.includes(tech)) {
-      setSelectedTechs([...selectedTechs, tech]);
-      setTechInput('');
+      setSelectedTechs((prev) => [...prev, tech]);
+      setTechInput("");
       setShowTechDropdown(false);
     }
   };
 
   const handleTechRemove = (techToRemove) => {
-    setSelectedTechs(selectedTechs.filter(tech => tech !== techToRemove));
+    setSelectedTechs((prev) => prev.filter((tech) => tech !== techToRemove));
   };
 
   const handleTechInputChange = (e) => {
@@ -124,7 +146,7 @@ export default function ExperiencePage() {
   };
 
   const handleTechInputKeyPress = (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
+    if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       if (techInput.trim()) {
         handleTechAdd(techInput.trim());
@@ -135,26 +157,26 @@ export default function ExperiencePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
       const submitData = {
         ...formData,
         startDate: new Date(formData.startDate),
         endDate: formData.isCurrent ? null : new Date(formData.endDate),
-        technologies: selectedTechs.join(', ')
+        technologies: selectedTechs.join(", "),
       };
 
       if (editingExperience) {
         await api.put(`/profile/experiences/${editingExperience.id}`, submitData);
       } else {
-        await api.post('/profile/experiences', submitData);
+        await api.post("/profile/experiences", submitData);
       }
-      
+
       await fetchExperiences();
       resetForm();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save experience');
+      setError(err.response?.data?.message || "Failed to save experience");
     } finally {
       setSubmitting(false);
     }
@@ -162,20 +184,20 @@ export default function ExperiencePage() {
 
   const resetForm = () => {
     setFormData({
-      company: '',
-      role: '',
-      startDate: '',
-      endDate: '',
-      description: '',
-      technologies: '',
-      isCurrent: false
+      company: "",
+      role: "",
+      startDate: "",
+      endDate: "",
+      description: "",
+      technologies: "",
+      isCurrent: false,
     });
     setSelectedTechs([]);
-    setTechInput('');
+    setTechInput("");
     setShowTechDropdown(false);
     setEditingExperience(null);
     setShowForm(false);
-    setError('');
+    setError("");
   };
 
   const handleEdit = (experience) => {
@@ -183,398 +205,369 @@ export default function ExperiencePage() {
     setFormData({
       company: experience.company,
       role: experience.role,
-      startDate: new Date(experience.startDate).toISOString().split('T')[0],
-      endDate: experience.endDate ? new Date(experience.endDate).toISOString().split('T')[0] : '',
+      startDate: new Date(experience.startDate).toISOString().split("T")[0],
+      endDate: experience.endDate ? new Date(experience.endDate).toISOString().split("T")[0] : "",
       description: experience.description,
-      technologies: experience.technologies || '',
-      isCurrent: !experience.endDate
+      technologies: experience.technologies || "",
+      isCurrent: !experience.endDate,
     });
-    setSelectedTechs(experience.technologies ? experience.technologies.split(',').map(tech => tech.trim()) : []);
+    setSelectedTechs(
+      experience.technologies ? experience.technologies.split(",").map((tech) => tech.trim()) : []
+    );
     setShowForm(true);
   };
 
   const handleDelete = async (experienceId) => {
-    if (!confirm('Are you sure you want to delete this experience?')) return;
-    
+    if (!confirm("Are you sure you want to delete this experience?")) return;
+
     try {
       await api.delete(`/profile/experiences/${experienceId}`);
       await fetchExperiences();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete experience');
+      setError(err.response?.data?.message || "Failed to delete experience");
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    router.push('/');
+    localStorage.removeItem("token");
+    router.push("/");
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long'
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
     });
-  };
 
   const calculateDuration = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = endDate ? new Date(endDate) : new Date();
-    
+
     const years = end.getFullYear() - start.getFullYear();
     const months = end.getMonth() - start.getMonth();
-    
+
     let totalMonths = years * 12 + months;
     if (end.getDate() < start.getDate()) totalMonths--;
-    
+
     const yearsPart = Math.floor(totalMonths / 12);
     const monthsPart = totalMonths % 12;
-    
-    let duration = '';
-    if (yearsPart > 0) duration += `${yearsPart} year${yearsPart > 1 ? 's' : ''}`;
+
+    let duration = "";
+    if (yearsPart > 0) duration += `${yearsPart} year${yearsPart > 1 ? "s" : ""}`;
     if (monthsPart > 0) {
-      if (duration) duration += ' ';
-      duration += `${monthsPart} month${monthsPart > 1 ? 's' : ''}`;
+      if (duration) duration += " ";
+      duration += `${monthsPart} month${monthsPart > 1 ? "s" : ""}`;
     }
-    
-    return duration || 'Less than a month';
+
+    return duration || "Less than a month";
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="flex min-h-screen flex-col.items-center justify-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-border/50 border-t-primary"></div>
+          <p className="text-[12px] uppercase tracking-[0.3em] text-foreground/60">
+            Collecting experience records
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => router.push('/dashboard')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div className="flex items-center space-x-2">
-                <FileText className="h-8 w-8 text-blue-600" />
-                <span className="text-2xl font-bold text-gray-900">REZOOM</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-gray-600" />
-                <span className="text-gray-700">{user?.name}</span>
-              </div>
-              <Button variant="ghost" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+    <DashboardShell user={user} onLogout={handleLogout} backHref="/dashboard" backLabel="Dashboard">
+      <section className="space-y-6 border-b border-border/80 pb-10">
+        <Badge className="border-border/50 bg-accent/70 text-foreground/60">Experience editor</Badge>
+        <div className="grid gap-10 lg:grid-cols-[0.8fr,1.2fr]">
+          <div className="space-y-6">
+            <h1 className="font-serif text-[clamp(2.6rem,4vw,3.6rem)] leading-[1.05]">
+              Curate your work history like a publication timeline.
+            </h1>
+            <p className="max-w-md text-[15px] leading-8 text-foreground/70">
+              Document each role with the clarity of an editorial feature. Highlight measurable impact, evolving
+              responsibilities, and the technologies that shaped your craft.
+            </p>
+            <Button size="lg" onClick={() => setShowForm(true)} className="w-full max-w-xs justify-center">
+              <Plus className="mr-2 h-4 w-4" />
+              Add experience
+            </Button>
           </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Work Experience</h1>
-          <p className="text-gray-600">Manage your professional work experience</p>
-        </div>
-
-        {/* Add Experience Button */}
-        <div className="mb-6">
-          <Button 
-            onClick={() => setShowForm(true)}
-            className="flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Work Experience
-          </Button>
-        </div>
-
-        {/* Experience Form */}
-        {showForm && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>
-                {editingExperience ? 'Edit Experience' : 'Add Work Experience'}
-              </CardTitle>
-              <CardDescription>
-                Fill in your work experience details
+          <Card className="border border-border/70 bg-card/90">
+            <CardHeader className="space-y-4">
+              <CardTitle className="font-serif text-3xl">What recruiters notice</CardTitle>
+              <CardDescription className="text-[15px] leading-7 text-foreground/70">
+                Lead with metrics, underscore collaboration, and close with the tools that supported delivery. Each entry
+                should read like a mini case study.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-                    {error}
-                  </div>
-                )}
+            <CardContent className="space-y-3 pb-10 text-[12px] uppercase tracking-[0.22em] text-foreground/60">
+              <p>• Present-tense for current roles, past-tense for previous engagements</p>
+              <p>• Anchor achievements to outcomes: revenue, adoption, efficiency gains</p>
+              <p>• Match keywords from the job description to improve ATS alignment</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="company" className="text-sm font-medium text-gray-700">
-                      Company Name *
-                    </label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="company"
-                        name="company"
-                        value={formData.company}
-                        onChange={handleChange}
-                        placeholder="e.g., Google, Microsoft, Startup Inc."
-                        required
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
+      {showForm && (
+        <Card className="mt-10 border border-border/70 bg-card/90">
+          <CardHeader className="space-y-3">
+            <CardTitle className="font-serif text-2xl">
+              {editingExperience ? "Update experience" : "Add new experience"}
+            </CardTitle>
+            <CardDescription className="text-[15px] leading-7 text-foreground/70">
+              Chronicle the role, your responsibilities, and the impact you delivered.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-12">
+            <form onSubmit={handleSubmit} className="space-y-7">
+              {error ? (
+                <div className="rounded-3xl border border-destructive/30 bg-destructive/10 px-5 py-4 text-sm text-destructive">
+                  {error}
+                </div>
+              ) : null}
 
-                  <div className="space-y-2">
-                    <label htmlFor="role" className="text-sm font-medium text-gray-700">
-                      Job Title *
-                    </label>
-                    <div className="relative">
-                      <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="role"
-                        name="role"
-                        value={formData.role}
-                        onChange={handleChange}
-                        placeholder="e.g., Software Engineer, Product Manager"
-                        required
-                        className="pl-10"
-                      />
-                    </div>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3">
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="company">
+                    Company name*
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="company"
+                      name="company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      placeholder="Studio, startup, or enterprise"
+                      required
+                      className="pl-10"
+                    />
+                    <Building className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                   </div>
                 </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="startDate" className="text-sm font-medium text-gray-700">
-                      Start Date *
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="startDate"
-                        name="startDate"
-                        type="date"
-                        value={formData.startDate}
-                        onChange={handleChange}
-                        required
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="endDate" className="text-sm font-medium text-gray-700">
-                      End Date
-                    </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="endDate"
-                        name="endDate"
-                        type="date"
-                        value={formData.endDate}
-                        onChange={handleChange}
-                        disabled={formData.isCurrent}
-                        className="pl-10"
-                      />
-                    </div>
+                <div className="space-y-3">
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="role">
+                    Role title*
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="role"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      placeholder="Lead Product Designer"
+                      required
+                      className="pl-10"
+                    />
+                    <Briefcase className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                   </div>
                 </div>
+              </div>
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="isCurrent"
-                    name="isCurrent"
-                    type="checkbox"
-                    checked={formData.isCurrent}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3">
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="startDate">
+                    Start date*
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="startDate"
+                      name="startDate"
+                      type="date"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      required
+                      className="pl-10"
+                    />
+                    <Calendar className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="endDate">
+                    End date
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="endDate"
+                      name="endDate"
+                      type="date"
+                      value={formData.endDate}
+                      onChange={handleChange}
+                      disabled={formData.isCurrent}
+                      className="pl-10"
+                    />
+                    <Calendar className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  id="isCurrent"
+                  name="isCurrent"
+                  type="checkbox"
+                  checked={formData.isCurrent}
+                  onChange={handleChange}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                />
+                <label className="text-[12px] uppercase tracking-[0.24em] text-foreground/70" htmlFor="isCurrent">
+                  I currently hold this role
+                </label>
+              </div>
+
+              <div className="space-y-3" ref={dropdownRef}>
+                <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70">
+                  Technologies used
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTechs.map((tech) => (
+                    <Badge key={tech} variant="secondary" className="flex items-center gap-2 rounded-full px-4 py-1">
+                      <span className="text-[11px] uppercase tracking-[0.24em]">{tech}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleTechRemove(tech)}
+                        className="text-foreground/50 transition hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+                <div className="relative">
+                  <Input
+                    value={techInput}
+                    onChange={handleTechInputChange}
+                    onKeyDown={handleTechInputKeyPress}
+                    onFocus={() => setShowTechDropdown(true)}
+                    placeholder="Add frameworks, tooling, or methodologies"
                   />
-                  <label htmlFor="isCurrent" className="text-sm font-medium text-gray-700">
-                    I currently work here
-                  </label>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="technologies" className="text-sm font-medium text-gray-700">
-                    Technologies Used
-                  </label>
-                  <div className="space-y-2" ref={dropdownRef}>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {selectedTechs.map((tech, index) => (
-                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                          {tech}
+                  {showTechDropdown && (
+                    <div className="absolute z-10 mt-2 max-h-52 w-full overflow-y-auto rounded-3xl border border-border/70 bg-card shadow-xl">
+                      {TECHNOLOGY_LIBRARY.filter(
+                        (tech) =>
+                          tech.toLowerCase().includes(techInput.toLowerCase()) && !selectedTechs.includes(tech)
+                      )
+                        .slice(0, 12)
+                        .map((tech) => (
                           <button
+                            key={tech}
                             type="button"
-                            onClick={() => handleTechRemove(tech)}
-                            className="ml-1 hover:text-red-500"
+                            onClick={() => handleTechAdd(tech)}
+                            className="flex w-full items-center justify-between px-5 py-3 text-left text-[13px] uppercase tracking-[0.24em] text-foreground/70 transition hover:bg-accent/60"
                           >
-                            <X className="h-3 w-3" />
+                            {tech}
+                            <Plus className="h-3 w-3" />
                           </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="description">
+                  Narrative summary*
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Lead with impact, back it with metrics, close with collaboration."
+                  rows={6}
+                  required
+                  className="w-full rounded-3xl border border-border/70 bg-transparent px-6 py-4 text-sm leading-relaxed text-foreground/80 placeholder:text-foreground/40 focus-visible:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Button type="submit" disabled={submitting} className="px-7">
+                  {submitting ? "Saving" : editingExperience ? "Update experience" : "Add experience"}
+                </Button>
+                <Button type="button" variant="outline" onClick={resetForm} className="px-7">
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      <section className="mt-12 space-y-6">
+        {experiences.length === 0 ? (
+          <Card className="border border-border/70 bg-card/80 text-center">
+            <CardContent className="flex flex-col items-center gap-4 py-16">
+              <Briefcase className="h-12 w-12 text-foreground/40" />
+              <h3 className="font-serif text-2xl">No experience entries yet</h3>
+              <p className="max-w-md text-[14px] leading-7 text-foreground/60">
+                Build your professional timeline to unlock AI-guided bullet suggestions and tailored resume drafts.
+              </p>
+              <Button onClick={() => setShowForm(true)} className="px-7">
+                <Plus className="mr-2 h-4 w-4" />
+                Add your first role
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          experiences.map((experience) => (
+            <Card key={experience.id} className="border border-border/70 bg-card/90 transition hover:-translate-y-1 hover:shadow-xl">
+              <CardHeader className="space-y-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Building className="h-4 w-4 text-primary" />
+                      <CardTitle className="font-serif text-2xl">{experience.company}</CardTitle>
+                    </div>
+                    <p className="text-[14px] uppercase tracking-[0.22em] text-foreground/60">
+                      {experience.role}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-4 text-[13px] uppercase tracking-[0.22em] text-foreground/50">
+                      <span className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {formatDate(experience.startDate)} – {experience.endDate ? formatDate(experience.endDate) : "Present"}
+                      </span>
+                      <span>{calculateDuration(experience.startDate, experience.endDate)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(experience)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(experience.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6 pb-8">
+                {experience.technologies ? (
+                  <div className="space-y-3">
+                    <h4 className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/60">
+                      Core stack
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {experience.technologies.split(",").map((tech) => (
+                        <Badge key={tech} variant="secondary" className="rounded-full px-4 py-1 text-[11px] uppercase tracking-[0.24em]">
+                          {tech.trim()}
                         </Badge>
                       ))}
                     </div>
-                    <div className="relative">
-                      <Input
-                        value={techInput}
-                        onChange={handleTechInputChange}
-                        onKeyPress={handleTechInputKeyPress}
-                        onFocus={() => setShowTechDropdown(true)}
-                        placeholder="Type or select technologies..."
-                        className="mb-2"
-                      />
-                      {showTechDropdown && (
-                        <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-40 overflow-y-auto">
-                          {popularTechs
-                            .filter(tech => 
-                              tech.toLowerCase().includes(techInput.toLowerCase()) && 
-                              !selectedTechs.includes(tech)
-                            )
-                            .slice(0, 10)
-                            .map((tech, index) => (
-                              <button
-                                key={index}
-                                type="button"
-                                onClick={() => handleTechAdd(tech)}
-                                className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                              >
-                                {tech}
-                              </button>
-                            ))}
-                        </div>
-                      )}
-                    </div>
                   </div>
+                ) : null}
+                <div className="rounded-3xl border border-border/60 bg-card/80 px-6 py-5 text-sm leading-7 text-foreground/80">
+                  <p className="whitespace-pre-wrap">{experience.description}</p>
                 </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="description" className="text-sm font-medium text-gray-700">
-                    Job Description *
-                  </label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder="Describe your role, responsibilities, achievements, and key projects..."
-                    required
-                    rows={5}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div className="flex space-x-4">
-                  <Button type="submit" disabled={submitting}>
-                    {submitting ? 'Saving...' : (editingExperience ? 'Update Experience' : 'Add Experience')}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={resetForm}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Experiences List */}
-        <div className="space-y-6">
-          {experiences.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No work experience yet</h3>
-                <p className="text-gray-600 mb-4">Start building your professional profile by adding your work experience</p>
-                <Button onClick={() => setShowForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Experience
-                </Button>
               </CardContent>
             </Card>
-          ) : (
-            experiences.map((experience) => (
-              <Card key={experience.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Building className="h-5 w-5 text-blue-600" />
-                        <CardTitle className="text-xl">{experience.company}</CardTitle>
-                      </div>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Briefcase className="h-4 w-4 text-gray-500" />
-                        <span className="text-lg font-medium text-gray-700">{experience.role}</span>
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {formatDate(experience.startDate)} - {experience.endDate ? formatDate(experience.endDate) : 'Present'}
-                        </div>
-                        <div className="flex items-center">
-                          <span className="font-medium">
-                            {calculateDuration(experience.startDate, experience.endDate)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(experience)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(experience.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {experience.technologies && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                          <Code className="h-4 w-4 mr-1" />
-                          Technologies Used
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {experience.technologies.split(',').map((tech, index) => (
-                            <Badge key={index} variant="secondary">
-                              {tech.trim()}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="prose prose-sm max-w-none">
-                      <p className="text-gray-700 whitespace-pre-wrap">{experience.description}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
+          ))
+        )}
+      </section>
+    </DashboardShell>
   );
 }

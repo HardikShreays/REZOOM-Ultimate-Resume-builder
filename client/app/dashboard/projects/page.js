@@ -6,21 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  User, 
-  LogOut, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  ExternalLink, 
+import {
+  Plus,
+  Edit,
+  Trash2,
+  ExternalLink,
   Github,
   Calendar,
   Code,
-  ArrowLeft,
   X
 } from "lucide-react";
 import api from '@/services/api';
+import { DashboardShell } from "@/components/dashboard/shell";
 
 export default function ProjectsPage() {
   const [user, setUser] = useState(null);
@@ -201,209 +198,185 @@ export default function ProjectsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <DashboardShell user={user} onLogout={handleLogout} backHref="/dashboard" backLabel="Dashboard">
+        <div className="flex h-[60vh] flex-col items-center justify-center gap-4 text-foreground/60">
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-border/60 border-t-primary" />
+          <p className="text-[12px] uppercase tracking-[0.3em]">Loading projects</p>
         </div>
-      </div>
+      </DashboardShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => router.push('/dashboard')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div className="flex items-center space-x-2">
-                <FileText className="h-8 w-8 text-blue-600" />
-                <span className="text-2xl font-bold text-gray-900">REZOOM</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-gray-600" />
-                <span className="text-gray-700">{user?.name}</span>
-              </div>
-              <Button variant="ghost" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+    <DashboardShell user={user} onLogout={handleLogout} backHref="/dashboard" backLabel="Dashboard">
+      <div className="space-y-12">
+        <section className="grid gap-12 lg:grid-cols-[0.8fr,1.2fr]">
+          <div className="space-y-6">
+            <Badge className="border-border/60 bg-accent/70 text-foreground/60">Project library</Badge>
+            <h1 className="font-serif text-[clamp(2.6rem,4vw,3.6rem)] leading-[1.05]">
+              Capture your best work with structured, compelling case studies.
+            </h1>
+            <p className="max-w-md text-[15px] leading-8 text-foreground/70">
+              Highlight the problem, your contribution, and the results. Pair each project with the stack that powered
+              it to show depth and breadth at a glance.
+            </p>
+            <Button size="lg" className="w-full max-w-xs justify-center" onClick={() => setShowForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add project
+            </Button>
           </div>
-        </div>
-      </nav>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Projects</h1>
-          <p className="text-gray-600">Manage your portfolio projects</p>
-        </div>
-
-        {/* Add Project Button */}
-        <div className="mb-6">
-          <Button 
-            onClick={() => setShowForm(true)}
-            className="flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Project
-          </Button>
-        </div>
-
-        {/* Project Form */}
-        {showForm && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>
-                {editingProject ? 'Edit Project' : 'Add New Project'}
-              </CardTitle>
-              <CardDescription>
-                Fill in the details of your project
+          <Card className="border border-border/70 bg-card/90">
+            <CardHeader className="space-y-4">
+              <CardTitle className="font-serif text-3xl">What to include</CardTitle>
+              <CardDescription className="text-[15px] leading-7 text-foreground/70">
+                Tell the full story: business context, your role, the stack, and the measurable impact. Projects written
+                this way make it easy to tailor your resume for each role.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4 pb-10 text-[12px] uppercase tracking-[0.24em] text-foreground/60">
+              <p className="flex items-center gap-2">
+                <Code className="h-4 w-4 text-primary" /> Mention scope and team size for collaboration context.
+              </p>
+              <p className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" /> Add timelines and release cadences to show delivery pace.
+              </p>
+              <p className="flex items-center gap-2">
+                <Github className="h-4 w-4 text-primary" /> Link to repos or demos so reviewers can explore further.
+              </p>
+            </CardContent>
+          </Card>
+        </section>
+
+        {showForm && (
+          <Card className="border border-border/70 bg-card/90">
+            <CardHeader className="space-y-3">
+              <CardTitle className="font-serif text-2xl">
+                {editingProject ? 'Update project' : 'Add a new project'}
+              </CardTitle>
+              <CardDescription className="text-[15px] leading-7 text-foreground/70">
+                Capture the essentials—outcome, your role, and the technologies used.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pb-10">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                  <div className="rounded-3xl border border-destructive/30 bg-destructive/10 px-5 py-4 text-sm text-destructive">
                     {error}
                   </div>
                 )}
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="title" className="text-sm font-medium text-gray-700">
-                      Project Title *
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="title">
+                      Project title*
                     </label>
                     <Input
                       id="title"
                       name="title"
                       value={formData.title}
                       onChange={handleChange}
-                      placeholder="e.g., E-commerce Website"
+                      placeholder="AI resume builder platform"
                       required
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="techStack" className="text-sm font-medium text-gray-700">
-                      Tech Stack
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="githubUrl">
+                      GitHub repository
                     </label>
-                    <div className="space-y-2" ref={dropdownRef}>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {selectedTechs.map((tech, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                            {tech}
-                            <button
-                              type="button"
-                              onClick={() => handleTechRemove(tech)}
-                              className="ml-1 hover:text-red-500"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="relative">
-                        <Input
-                          value={techInput}
-                          onChange={handleTechInputChange}
-                          onKeyPress={handleTechInputKeyPress}
-                          onFocus={() => setShowTechDropdown(true)}
-                          placeholder="Type or select technologies..."
-                          className="mb-2"
-                        />
-                        {showTechDropdown && (
-                          <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-40 overflow-y-auto">
-                            {popularTechs
-                              .filter(tech => 
-                                tech.toLowerCase().includes(techInput.toLowerCase()) && 
-                                !selectedTechs.includes(tech)
-                              )
-                              .slice(0, 10)
-                              .map((tech, index) => (
-                                <button
-                                  key={index}
-                                  type="button"
-                                  onClick={() => handleTechAdd(tech)}
-                                  className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                                >
-                                  {tech}
-                                </button>
-                              ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <Input
+                      id="githubUrl"
+                      name="githubUrl"
+                      value={formData.githubUrl}
+                      onChange={handleChange}
+                      placeholder="https://github.com/username/project"
+                    />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label htmlFor="description" className="text-sm font-medium text-gray-700">
-                    Project Description *
+                <div className="space-y-3">
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="liveUrl">
+                    Live demo
+                  </label>
+                  <Input
+                    id="liveUrl"
+                    name="liveUrl"
+                    value={formData.liveUrl}
+                    onChange={handleChange}
+                    placeholder="https://demo.example.com"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="description">
+                    Project summary*
                   </label>
                   <textarea
                     id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    placeholder="Describe your project, what it does, key features, challenges solved, etc."
+                    placeholder="Describe the challenge, your contribution, and the outcome."
+                    rows={5}
                     required
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full rounded-3xl border border-border/70 bg-transparent px-6 py-4 text-sm leading-relaxed text-foreground/80 placeholder:text-foreground/40 focus-visible:border-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="githubUrl" className="text-sm font-medium text-gray-700">
-                      GitHub URL
-                    </label>
-                    <div className="relative">
-                      <Github className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="githubUrl"
-                        name="githubUrl"
-                        type="url"
-                        value={formData.githubUrl}
-                        onChange={handleChange}
-                        placeholder="https://github.com/username/repo"
-                        className="pl-10"
-                      />
-                    </div>
+                <div className="space-y-3" ref={dropdownRef}>
+                  <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70">
+                    Tech stack
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTechs.map((tech) => (
+                      <Badge key={tech} variant="secondary" className="flex items-center gap-2 rounded-full px-4 py-1 text-[11px] uppercase tracking-[0.24em]">
+                        {tech}
+                        <button
+                          type="button"
+                          onClick={() => handleTechRemove(tech)}
+                          className="text-foreground/50 transition hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
                   </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="liveUrl" className="text-sm font-medium text-gray-700">
-                      Live Demo URL
-                    </label>
-                    <div className="relative">
-                      <ExternalLink className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="liveUrl"
-                        name="liveUrl"
-                        type="url"
-                        value={formData.liveUrl}
-                        onChange={handleChange}
-                        placeholder="https://your-project.com"
-                        className="pl-10"
-                      />
-                    </div>
+                  <div className="relative">
+                    <Input
+                      value={techInput}
+                      onChange={handleTechInputChange}
+                      onKeyDown={handleTechInputKeyPress}
+                      onFocus={() => setShowTechDropdown(true)}
+                      placeholder="Add frameworks, libraries, or tooling"
+                    />
+                    {showTechDropdown && (
+                      <div className="absolute z-10 mt-2 max-h-52 w-full overflow-y-auto rounded-3xl border border-border/70 bg-card shadow-xl">
+                        {popularTechs
+                          .filter(
+                            (tech) => tech.toLowerCase().includes(techInput.toLowerCase()) && !selectedTechs.includes(tech)
+                          )
+                          .slice(0, 12)
+                          .map((tech) => (
+                            <button
+                              key={tech}
+                              type="button"
+                              onClick={() => handleTechAdd(tech)}
+                              className="flex w-full items-center justify-between px-5 py-3 text-left text-[13px] uppercase tracking-[0.24em] text-foreground/70 transition hover:bg-accent/60"
+                            >
+                              {tech}
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex space-x-4">
-                  <Button type="submit" disabled={submitting}>
-                    {submitting ? 'Saving...' : (editingProject ? 'Update Project' : 'Add Project')}
+                <div className="flex flex-wrap gap-3">
+                  <Button type="submit" disabled={submitting} className="px-7">
+                    {submitting ? 'Saving' : editingProject ? 'Update project' : 'Add project'}
                   </Button>
-                  <Button type="button" variant="outline" onClick={resetForm}>
+                  <Button type="button" variant="outline" onClick={resetForm} className="px-7">
                     Cancel
                   </Button>
                 </div>
@@ -412,58 +385,72 @@ export default function ProjectsPage() {
           </Card>
         )}
 
-        {/* Projects List */}
-        <div className="grid gap-6">
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl">Project catalog</h2>
+              <p className="text-[14px] leading-7 text-foreground/60">
+                {projects.length
+                  ? 'Edit, reorder, or archive your most persuasive case studies.'
+                  : 'Once you add projects, they will appear here with quick edit controls.'}
+              </p>
+            </div>
+            {projects.length > 0 && (
+              <Button variant="outline" className="px-6" onClick={() => setShowForm(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add another
+              </Button>
+            )}
+          </div>
+
           {projects.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Code className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No projects yet</h3>
-                <p className="text-gray-600 mb-4">Start building your portfolio by adding your first project</p>
-                <Button onClick={() => setShowForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Project
-                </Button>
+            <Card className="border border-dashed border-border/70 bg-card/80 text-center">
+              <CardContent className="py-12 text-[14px] uppercase tracking-[0.24em] text-foreground/60">
+                Start documenting your flagship projects to tailor resumes with evidence.
               </CardContent>
             </Card>
           ) : (
-            projects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-xl">{project.title}</CardTitle>
-                      <CardDescription className="mt-2">
-                        {project.description}
-                      </CardDescription>
+            <div className="grid gap-6 md:grid-cols-2">
+              {projects.map((project) => (
+                <Card key={project.id} className="border border-border/70 bg-card/90 transition hover:-translate-y-1 hover:shadow-xl">
+                  <CardHeader className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-2">
+                        <CardTitle className="font-serif text-xl text-foreground">{project.title}</CardTitle>
+                        <div className="flex items-center gap-2 text-[13px] uppercase tracking-[0.24em] text-foreground/50">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(project.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long'
+                          })}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(project)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(project.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(project)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(project.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm leading-7 text-foreground/80">
+                    <p>{project.description}</p>
+
                     {project.techStack && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Tech Stack</h4>
+                      <div className="space-y-2">
+                        <h4 className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/60">
+                          Tech stack
+                        </h4>
                         <div className="flex flex-wrap gap-2">
-                          {project.techStack.split(',').map((tech, index) => (
-                            <Badge key={index} variant="secondary">
+                          {project.techStack.split(',').map((tech) => (
+                            <Badge key={tech} variant="secondary" className="rounded-full px-4 py-1 text-[11px] uppercase tracking-[0.24em]">
                               {tech.trim()}
                             </Badge>
                           ))}
@@ -471,16 +458,16 @@ export default function ProjectsPage() {
                       </div>
                     )}
 
-                    <div className="flex space-x-4">
+                    <div className="flex flex-wrap gap-4 text-[13px] uppercase tracking-[0.24em]">
                       {project.githubUrl && (
                         <a
                           href={project.githubUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center text-blue-600 hover:text-blue-700"
+                          className="flex items-center gap-2 text-foreground/70 transition hover:text-primary"
                         >
-                          <Github className="h-4 w-4 mr-1" />
-                          View Code
+                          <Github className="h-4 w-4" />
+                          GitHub
                         </a>
                       )}
                       {project.liveUrl && (
@@ -488,27 +475,20 @@ export default function ProjectsPage() {
                           href={project.liveUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center text-green-600 hover:text-green-700"
+                          className="flex items-center gap-2 text-foreground/70 transition hover:text-primary"
                         >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          Live Demo
+                          <ExternalLink className="h-4 w-4" />
+                          Live demo
                         </a>
                       )}
                     </div>
-
-                    <div className="text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        Created {new Date(project.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
-        </div>
+        </section>
       </div>
-    </div>
+    </DashboardShell>
   );
 }

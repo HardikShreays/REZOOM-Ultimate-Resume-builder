@@ -6,14 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  User, 
-  LogOut, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  ArrowLeft,
+import { DashboardShell } from "@/components/dashboard/shell";
+import {
+  Plus,
+  Edit,
+  Trash2,
   Calendar,
   Award,
   ExternalLink,
@@ -166,195 +163,163 @@ export default function CertificationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <DashboardShell user={user} onLogout={handleLogout} backHref="/dashboard" backLabel="Dashboard">
+        <div className="flex h-[60vh] flex-col items-center justify-center gap-4 text-foreground/60">
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-border/60 border-t-primary" />
+          <p className="text-[12px] uppercase tracking-[0.3em]">Gathering certifications</p>
         </div>
-      </div>
+      </DashboardShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Navigation */}
-      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" onClick={() => router.push('/dashboard')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div className="flex items-center space-x-2">
-                <FileText className="h-8 w-8 text-blue-600" />
-                <span className="text-2xl font-bold text-gray-900">REZOOM</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-gray-600" />
-                <span className="text-gray-700">{user?.name}</span>
-              </div>
-              <Button variant="ghost" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+    <DashboardShell user={user} onLogout={handleLogout} backHref="/dashboard" backLabel="Dashboard">
+      <div className="space-y-12">
+        <section className="grid gap-12 lg:grid-cols-[0.8fr,1.2fr]">
+          <div className="space-y-6">
+            <Badge className="border-border/60 bg-accent/70 text-foreground/60">Credentials</Badge>
+            <h1 className="font-serif text-[clamp(2.6rem,4vw,3.6rem)] leading-[1.05]">
+              Showcase certifications that reinforce your expertise and currency.
+            </h1>
+            <p className="max-w-md text-[15px] leading-8 text-foreground/70">
+              Track renewal dates, credential IDs, and links so recruiters can verify your accomplishments instantly.
+              Highlight the badges that differentiate your skillset.
+            </p>
+            <Button size="lg" className="w-full max-w-xs justify-center" onClick={() => setShowForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add certification
+            </Button>
           </div>
-        </div>
-      </nav>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Certifications</h1>
-          <p className="text-gray-600">Manage your professional certifications</p>
-        </div>
-
-        {/* Add Certification Button */}
-        <div className="mb-6">
-          <Button 
-            onClick={() => setShowForm(true)}
-            className="flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Certification
-          </Button>
-        </div>
-
-        {/* Certification Form */}
-        {showForm && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>
-                {editingCertification ? 'Edit Certification' : 'Add New Certification'}
-              </CardTitle>
-              <CardDescription>
-                Add your professional certifications and credentials
+          <Card className="border border-border/70 bg-card/90">
+            <CardHeader className="space-y-4">
+              <CardTitle className="font-serif text-3xl">Keep them current</CardTitle>
+              <CardDescription className="text-[15px] leading-7 text-foreground/70">
+                Hiring teams love verifiable proof. Include credential IDs, renewal cycles, and direct links so nothing is
+                left to chance.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4 pb-10 text-[12px] uppercase tracking-[0.24em] text-foreground/60">
+              <p className="flex items-center gap-2">
+                <Award className="h-4 w-4 text-primary" /> Pair each badge with a sentence about the capability it proves.
+              </p>
+              <p className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" /> Flag expirations to stay ahead of recertification windows.
+              </p>
+              <p className="flex items-center gap-2">
+                <ExternalLink className="h-4 w-4 text-primary" /> Link to credential pages for instant verification.
+              </p>
+            </CardContent>
+          </Card>
+        </section>
+
+        {showForm && (
+          <Card className="border border-border/70 bg-card/90">
+            <CardHeader className="space-y-3">
+              <CardTitle className="font-serif text-2xl">
+                {editingCertification ? 'Update certification' : 'Add a new certification'}
+              </CardTitle>
+              <CardDescription className="text-[15px] leading-7 text-foreground/70">
+                Keep credential details precise so review teams can validate them quickly.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pb-10">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                  <div className="rounded-3xl border border-destructive/30 bg-destructive/10 px-5 py-4 text-sm text-destructive">
                     {error}
                   </div>
                 )}
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="title" className="text-sm font-medium text-gray-700">
-                      Certification Title *
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="title">
+                      Certification title*
                     </label>
-                    <div className="relative">
-                      <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="title"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleChange}
-                        placeholder="e.g., AWS Certified Solutions Architect"
-                        required
-                        className="pl-10"
-                      />
-                    </div>
+                    <Input
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      placeholder="AWS Certified Solutions Architect"
+                      required
+                    />
                   </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="issuer" className="text-sm font-medium text-gray-700">
-                      Issuing Organization *
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="issuer">
+                      Issuer*
                     </label>
-                    <div className="relative">
-                      <Award className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="issuer"
-                        name="issuer"
-                        value={formData.issuer}
-                        onChange={handleChange}
-                        placeholder="e.g., Amazon Web Services, Microsoft, Google"
-                        required
-                        className="pl-10"
-                      />
-                    </div>
+                    <Input
+                      id="issuer"
+                      name="issuer"
+                      value={formData.issuer}
+                      onChange={handleChange}
+                      placeholder="Amazon Web Services"
+                      required
+                    />
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="issueDate" className="text-sm font-medium text-gray-700">
-                      Issue Date *
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="issueDate">
+                      Issue date*
                     </label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="issueDate"
-                        name="issueDate"
-                        type="date"
-                        value={formData.issueDate}
-                        onChange={handleChange}
-                        required
-                        className="pl-10"
-                      />
-                    </div>
+                    <Input
+                      id="issueDate"
+                      name="issueDate"
+                      type="date"
+                      value={formData.issueDate}
+                      onChange={handleChange}
+                      required
+                    />
                   </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="expiryDate" className="text-sm font-medium text-gray-700">
-                      Expiry Date (Optional)
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="expiryDate">
+                      Expiry date
                     </label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="expiryDate"
-                        name="expiryDate"
-                        type="date"
-                        value={formData.expiryDate}
-                        onChange={handleChange}
-                        className="pl-10"
-                      />
-                    </div>
+                    <Input
+                      id="expiryDate"
+                      name="expiryDate"
+                      type="date"
+                      value={formData.expiryDate}
+                      onChange={handleChange}
+                    />
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label htmlFor="credentialId" className="text-sm font-medium text-gray-700">
-                      Credential ID (Optional)
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="credentialId">
+                      Credential ID
                     </label>
                     <Input
                       id="credentialId"
                       name="credentialId"
                       value={formData.credentialId}
                       onChange={handleChange}
-                      placeholder="e.g., AWS-123456789"
+                      placeholder="Credential identifier"
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="credentialUrl" className="text-sm font-medium text-gray-700">
-                      Credential URL (Optional)
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold uppercase tracking-[0.24em] text-foreground/70" htmlFor="credentialUrl">
+                      Credential URL
                     </label>
-                    <div className="relative">
-                      <ExternalLink className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="credentialUrl"
-                        name="credentialUrl"
-                        type="url"
-                        value={formData.credentialUrl}
-                        onChange={handleChange}
-                        placeholder="https://credly.com/badges/..."
-                        className="pl-10"
-                      />
-                    </div>
+                    <Input
+                      id="credentialUrl"
+                      name="credentialUrl"
+                      value={formData.credentialUrl}
+                      onChange={handleChange}
+                      placeholder="https://verify.example.com"
+                    />
                   </div>
                 </div>
 
-                <div className="flex space-x-4">
-                  <Button type="submit" disabled={submitting}>
-                    {submitting ? 'Saving...' : (editingCertification ? 'Update Certification' : 'Add Certification')}
+                <div className="flex flex-wrap gap-3">
+                  <Button type="submit" disabled={submitting} className="px-7">
+                    {submitting ? 'Saving' : editingCertification ? 'Update certification' : 'Add certification'}
                   </Button>
-                  <Button type="button" variant="outline" onClick={resetForm}>
+                  <Button type="button" variant="outline" onClick={resetForm} className="px-7">
                     Cancel
                   </Button>
                 </div>
@@ -363,112 +328,112 @@ export default function CertificationsPage() {
           </Card>
         )}
 
-        {/* Certifications List */}
-        <div className="grid gap-6">
-          {certifications.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <GraduationCap className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No certifications added yet</h3>
-                <p className="text-gray-600 mb-4">Start building your professional credentials by adding your first certification</p>
-                <Button onClick={() => setShowForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Certification
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            certifications.map((certification) => (
-              <Card key={certification.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <GraduationCap className="h-6 w-6 text-blue-600" />
-                        <div>
-                          <CardTitle className="text-xl">{certification.title}</CardTitle>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Award className="h-4 w-4 text-gray-500" />
-                            <span className="text-lg font-medium text-gray-700">{certification.issuer}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          Issued: {formatDate(certification.issueDate)}
-                        </div>
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-2xl">Certification tracker</h2>
+              <p className="text-[14px] leading-7 text-foreground/60">
+                {certifications.length
+                  ? 'Stay on top of renewals and keep proof ready for every interview.'
+                  : 'Once you add certifications, they will appear here with quick edit controls.'}
+              </p>
+            </div>
+            {certifications.length > 0 && (
+              <Button variant="outline" className="px-6" onClick={() => setShowForm(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add another
+              </Button>
+            )}
+          </div>
+
+        {certifications.length === 0 ? (
+          <Card className="border border-dashed border-border/70 bg-card/80 text-center">
+            <CardContent className="py-12 text-[14px] uppercase tracking-[0.24em] text-foreground/60">
+              Record your certifications to boost credibility with verifiable proof.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2">
+            {certifications.map((certification) => (
+              <Card key={certification.id} className="border border-border/70 bg-card/90 transition hover:-translate-y-1 hover:shadow-xl">
+                <CardHeader className="space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-2">
+                      <CardTitle className="font-serif text-xl text-foreground">{certification.title}</CardTitle>
+                      <p className="text-[13px] uppercase tracking-[0.24em] text-foreground/50">
+                        {certification.issuer}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3 text-[12px] uppercase tracking-[0.24em] text-foreground/50">
+                        <span className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          Issued {formatDate(certification.issueDate)}
+                        </span>
                         {certification.expiryDate && (
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            Expires: {formatDate(certification.expiryDate)}
-                          </div>
+                          <span className="flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            Expires {formatDate(certification.expiryDate)}
+                          </span>
                         )}
                       </div>
-                      {certification.expiryDate && (
-                        <div className="mt-2">
-                          {isExpired(certification.expiryDate) ? (
-                            <Badge variant="destructive">Expired</Badge>
-                          ) : isExpiringSoon(certification.expiryDate) ? (
-                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                              Expires Soon
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="bg-green-100 text-green-800">
-                              Valid
-                            </Badge>
-                          )}
-                        </div>
-                      )}
                     </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(certification)}
-                      >
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(certification)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
+                        className="text-destructive hover:text-destructive"
                         onClick={() => handleDelete(certification.id)}
-                        className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
+                <CardContent className="space-y-4 text-sm leading-7 text-foreground/80">
+                  <div className="flex flex-wrap gap-2 text-[11px] uppercase tracking-[0.24em] text-foreground/50">
+                    <Badge
+                      className={`rounded-full px-4 py-1 ${
+                        isExpired(certification.expiryDate)
+                          ? 'bg-destructive/10 text-destructive'
+                          : isExpiringSoon(certification.expiryDate)
+                          ? 'bg-yellow-500/10 text-yellow-600'
+                          : 'bg-primary/10 text-primary'
+                      }`}
+                    >
+                      {isExpired(certification.expiryDate)
+                        ? 'Expired'
+                        : isExpiringSoon(certification.expiryDate)
+                        ? 'Renew soon'
+                        : 'Active'}
+                    </Badge>
+                    <span className="inline-flex items-center gap-2">
+                      <GraduationCap className="h-4 w-4" /> Credential
+                    </span>
                     {certification.credentialId && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-1">Credential ID</h4>
-                        <p className="text-sm text-gray-600 font-mono">{certification.credentialId}</p>
-                      </div>
-                    )}
-                    
-                    {certification.credentialUrl && (
-                      <div>
-                        <a
-                          href={certification.credentialUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-blue-600 hover:text-blue-700 text-sm"
-                        >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          View Credential
-                        </a>
-                      </div>
+                      <span className="font-mono text-xs text-foreground/60">ID: {certification.credentialId}</span>
                     )}
                   </div>
+
+                  {certification.credentialUrl && (
+                    <a
+                      href={certification.credentialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-[13px] uppercase tracking-[0.24em] text-foreground/70 transition hover:text-primary"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      View credential
+                    </a>
+                  )}
                 </CardContent>
               </Card>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
+        </section>
       </div>
-    </div>
+    </DashboardShell>
   );
 }
