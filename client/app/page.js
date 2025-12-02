@@ -3,7 +3,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, CheckCircle, FileText, Layers, ShieldCheck, Sparkles, UserCheck } from "lucide-react";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Navbar } from "@/components/navbar";
 
 export const metadata = {
   title: "REZOOM - Build Your Perfect Resume | AI-Powered Resume Builder",
@@ -13,47 +13,7 @@ export const metadata = {
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#f8f7f5] text-slate-900 transition-colors dark:bg-[#101014] dark:text-slate-100">
-      <nav className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur transition-colors dark:border-slate-800/80 dark:bg-[#16161d]/90">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link
-            href="/"
-            className="flex items-center gap-3 font-semibold uppercase tracking-[0.18em] text-slate-700 transition-colors dark:text-slate-200"
-          >
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-slate-100 shadow-sm transition-colors dark:border-slate-700 dark:bg-[#1f1f27]">
-              <FileText className="h-5 w-5 text-slate-800 transition-colors dark:text-slate-200" />
-            </span>
-            REZOOM
-          </Link>
-          <div className="hidden items-center gap-10 text-[12px] font-semibold uppercase tracking-[0.28em] text-slate-500 transition-colors dark:text-slate-400 md:flex">
-            <a href="#features" className="transition hover:text-slate-900 dark:hover:text-slate-100">
-              Features
-            </a>
-            <a href="#workflow" className="transition hover:text-slate-900 dark:hover:text-slate-100">
-              Workflow
-            </a>
-            <a href="#pricing" className="transition hover:text-slate-900 dark:hover:text-slate-100">
-              Pricing
-            </a>
-            </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle className="text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100" />
-              <Link href="/login">
-              <Button
-                variant="ghost"
-                className="rounded-full border border-transparent px-5 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-300 dark:text-slate-200 dark:hover:border-slate-600"
-              >
-                Sign in
-              </Button>
-              </Link>
-              <Link href="/signup">
-              <Button className="rounded-full px-6 text-xs font-semibold uppercase tracking-[0.22em]">
-                Start for free
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       <main>
         <section className="border-b border-slate-200 bg-white transition-colors dark:border-slate-800 dark:bg-[#121217]">
