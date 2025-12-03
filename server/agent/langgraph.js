@@ -7,6 +7,14 @@ const { HumanMessage, AIMessage, SystemMessage } = require("@langchain/core/mess
 const { z } = require("zod");
 const prisma = require("../lib/prisma");
 
+// Lightweight fetch helper that works both in Node 18+ (global fetch)
+// and older Node versions via dynamic import of node-fetch.
+const httpFetch =
+  typeof fetch === "function"
+    ? fetch
+    : (...args) =>
+        import("node-fetch").then(({ default: fetchFn }) => fetchFn(...args));
+
 // Define custom agent state (extends MessagesAnnotation with additional fields)
 const AgentState = Annotation.Root({
   // Messages from MessagesAnnotation
@@ -65,6 +73,199 @@ const getProfileTool = new DynamicStructuredTool({
       }
     });
     return JSON.stringify(user, null, 2);
+  },
+});
+
+// Parse and update social links from free-form text
+const parseAndUpdateSocialLinksTool = new DynamicStructuredTool({
+  name: "parse_and_update_social_links",
+  description: "Given any free-form text, extract the user's social/profile links (GitHub, LinkedIn, portfolio/personal website, Twitter, LeetCode, Codeforces, CodeChef, HackerRank, GeeksforGeeks) and update the corresponding fields on the user profile in the database. Only update fields for links that are actually present in the text.",
+  schema: z.object({
+    text: z.string().describe("The raw text that may contain one or more social/profile URLs."),
+  }),
+  func: async (input) => {
+    const userId = ensureUserId();
+    const text = input.text || "";
+
+    // Basic URL extraction
+    const urlRegex = /https?:\/\/[^\s)]+/gi;
+    const urls = text.match(urlRegex) || [];
+
+    const updateData = {};
+
+    for (const rawUrl of urls) {
+      let url = rawUrl.trim();
+      // Strip trailing punctuation
+      url = url.replace(/[),.]+$/, "");
+
+      try {
+        const parsed = new URL(url);
+        const host = parsed.hostname.toLowerCase();
+
+        // Only set each field once per invocation, keeping the first URL seen
+        if (host.includes("github.com")) {
+          if (!updateData.githubUrl) updateData.githubUrl = url;
+        } else if (host.includes("linkedin.com")) {
+          if (!updateData.linkedinUrl) updateData.linkedinUrl = url;
+        } else if (host.includes("twitter.com") || host.includes("x.com")) {
+          if (!updateData.twitterUrl) updateData.twitterUrl = url;
+        } else if (host.includes("leetcode.com")) {
+          if (!updateData.leetcodeUrl) updateData.leetcodeUrl = url;
+        } else if (host.includes("codeforces.com")) {
+          if (!updateData.codeforcesUrl) updateData.codeforcesUrl = url;
+        } else if (host.includes("codechef.com")) {
+          if (!updateData.codechefUrl) updateData.codechefUrl = url;
+        } else if (host.includes("hackerrank.com")) {
+          if (!updateData.hackerrankUrl) updateData.hackerrankUrl = url;
+        } else if (host.includes("geeksforgeeks.org")) {
+          if (!updateData.geeksforgeeksUrl) updateData.geeksforgeeksUrl = url;
+        } else {
+          // Treat any other valid URL as a potential portfolio/personal site
+          // Only set portfolioUrl if we don't already have a more specific match from this text
+          if (!updateData.portfolioUrl) {
+            updateData.portfolioUrl = url;
+          }
+        }
+      } catch (e) {
+        // Ignore invalid URLs
+        continue;
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return "No recognizable social/profile links were found in the provided text.";
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    return JSON.stringify(
+      {
+        message: "Social/profile links parsed and updated successfully.",
+        updatedFields: Object.keys(updateData),
+        user,
+      },
+      null,
+      2
+    );
+  },
+});
+
+// Import GitHub profile data (public repos) and create projects
+const importGithubProfileTool = new DynamicStructuredTool({
+  name: "import_github_profile_from_url",
+  description:
+    "Given a GitHub profile URL, fetch public repositories and create project entries for the user. Only add new projects for repos that are not already linked by githubUrl. Do not invent data.",
+  schema: z.object({
+    url: z.string().url().describe("GitHub profile URL, e.g. https://github.com/username"),
+    maxRepos: z
+      .number()
+      .int()
+      .min(1)
+      .max(30)
+      .optional()
+      .describe("Maximum number of recent repositories to import (default 8)."),
+  }),
+  func: async (input) => {
+    const userId = ensureUserId();
+    const githubUrl = input.url.trim();
+    const limit = input.maxRepos || 8;
+
+    let username;
+    try {
+      const parsed = new URL(githubUrl);
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      if (!parts[0]) {
+        throw new Error("Invalid GitHub profile URL");
+      }
+      username = parts[0];
+    } catch (e) {
+      throw new Error("Invalid GitHub profile URL");
+    }
+
+    const base = "https://api.github.com";
+    const headers = {
+      Accept: "application/vnd.github+json",
+    };
+    if (process.env.GITHUB_TOKEN) {
+      headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+    }
+
+    const userResp = await httpFetch(`${base}/users/${username}`, {
+      headers,
+    });
+    if (!userResp.ok) {
+      throw new Error(
+        `Failed to fetch GitHub user ${username}: ${userResp.status} ${userResp.statusText}`
+      );
+    }
+    const userData = await userResp.json();
+
+    const reposResp = await httpFetch(
+      `${base}/users/${username}/repos?sort=updated&per_page=${limit}`,
+      { headers }
+    );
+    if (!reposResp.ok) {
+      throw new Error(
+        `Failed to fetch repositories for ${username}: ${reposResp.status} ${reposResp.statusText}`
+      );
+    }
+    const repos = await reposResp.json();
+
+    const createdProjects = [];
+
+    for (const repo of repos) {
+      // Skip forks and archived repos to keep data relevant
+      if (repo.fork || repo.archived) continue;
+
+      const githubRepoUrl = repo.html_url;
+      if (!githubRepoUrl) continue;
+
+      // Avoid duplicates by githubUrl
+      const existing = await prisma.project.findFirst({
+        where: { userId, githubUrl: githubRepoUrl },
+      });
+      if (existing) continue;
+
+      const title = repo.name || "GitHub Project";
+      const description =
+        repo.description ||
+        `GitHub repository ${repo.name || ""}`.trim();
+
+      const techStackParts = [];
+      if (repo.language) techStackParts.push(repo.language);
+      const techStack = techStackParts.join(", ");
+
+      const project = await prisma.project.create({
+        data: {
+          userId,
+          title,
+          description,
+          techStack: techStack || "GitHub",
+          githubUrl: githubRepoUrl,
+          liveUrl: repo.homepage || null,
+        },
+      });
+
+      createdProjects.push({
+        id: project.id,
+        title: project.title,
+        githubUrl: project.githubUrl,
+      });
+    }
+
+    return {
+      username,
+      importedProjects: createdProjects.length,
+      projects: createdProjects,
+      githubProfile: {
+        htmlUrl: userData.html_url,
+        name: userData.name,
+        bio: userData.bio,
+      },
+    };
   },
 });
 
@@ -547,6 +748,8 @@ const deleteResumeTool = new DynamicStructuredTool({
 const tools = [
   getProfileTool,
   updateProfileTool,
+  parseAndUpdateSocialLinksTool,
+  importGithubProfileTool,
   createExperienceTool,
   getExperiencesTool,
   updateExperienceTool,
@@ -604,6 +807,13 @@ const SYSTEM_PROMPT = `You are a professional resume advisor and career consulta
    - When a user wants to view data, call the corresponding get_ tools and present the results clearly.
    - Always confirm with the user before deleting or overwriting data.
    - After using tools, summarize exactly what was done (e.g., “Created resume titled X – view it here: /dashboard/resumes”).
+   - Whenever a user message contains one or more URLs that look like social/profile links (GitHub, LinkedIn, portfolio/personal site, Twitter/X, LeetCode, Codeforces, CodeChef, HackerRank, GeeksforGeeks), call the parse_and_update_social_links tool with the raw user text to store those URLs on the user's profile before replying.
+   - When a user shares a GitHub profile URL, also call the import_github_profile_from_url tool to import a small number of their public repositories as projects (avoiding duplicates), then clearly tell them what was imported.
+   - When a user asks you to "scrape" or "pull from" LinkedIn, GitHub, or any external site:
+     - Explain briefly that you cannot directly browse arbitrary web pages, but for GitHub you can use the import_github_profile_from_url tool to import public repositories.
+     - Still call parse_and_update_social_links on their message so the shared URLs are saved to their profile.
+     - Ask them to share either (a) the URL and important sections of their profile text, or (b) a resume/export of their profile.
+     - When they share profile/resume text, extract only factual, relevant experience/education/skills/projects/certifications and save them using the appropriate create_ tools without inventing data.
 
 6. **Communication Style**:
    - Be concise but thorough.

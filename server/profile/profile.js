@@ -45,6 +45,51 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+// Export full profile data as JSON file
+router.get('/export', requireAuth, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+        githubUrl: true,
+        hackerrankUrl: true,
+        geeksforgeeksUrl: true,
+        codeforcesUrl: true,
+        leetcodeUrl: true,
+        codechefUrl: true,
+        linkedinUrl: true,
+        twitterUrl: true,
+        portfolioUrl: true,
+        experiences: true,
+        educations: true,
+        skills: true,
+        projects: true,
+        certifications: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const filename = `rezoom-profile-${(user.name || 'user')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')}.json`;
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    return res.send(JSON.stringify(user, null, 2));
+  } catch (err) {
+    console.error('Export profile error', err);
+    return res.status(500).json({ message: 'Failed to export profile' });
+  }
+});
+
 // Update user profile with social links and contact info
 router.put('/', requireAuth, async (req, res) => {
   try {
