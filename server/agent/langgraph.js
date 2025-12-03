@@ -1,7 +1,7 @@
 // server/automation/langgraph.js
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { StateGraph, MessagesAnnotation, Annotation } from "@langchain/langgraph";
-import { ToolNode, toolsConditional } from "@langchain/langgraph/prebuilt";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { HumanMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
 import { z } from "zod";
