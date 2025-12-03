@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DashboardShell } from "@/components/dashboard/shell";
-import { FileText, User, Plus, Eye } from "lucide-react";
+import { FileText, User, Plus, Eye, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import api from "@/services/api";
 
@@ -210,6 +210,26 @@ export default function DashboardPage() {
                 <Button className="w-full justify-center">
                   <Plus className="mr-2 h-4 w-4" />
                   Manage certifications
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-primary/30 bg-primary/5 hover:-translate-y-1 hover:shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-lg uppercase tracking-[0.24em]">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                AI Assistant
+              </CardTitle>
+              <CardDescription className="text-[15px] leading-7 text-foreground/70">
+                Get professional guidance on building your resume. Ask questions, get honest feedback, and let AI help you craft the perfect resume.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/dashboard/chat">
+                <Button className="w-full justify-center bg-primary text-primary-foreground hover:bg-primary/90">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Chat with AI
                 </Button>
               </Link>
             </CardContent>

@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { FloatingAIButton } from "@/components/floating-ai-button";
 import { FileText, LogOut, User, ArrowLeft } from "lucide-react";
 
 export function DashboardShell({ user, onLogout, backHref, backLabel = "Back", children }) {
+  const pathname = usePathname();
+  const showFloatingButton = pathname !== '/dashboard/chat';
+
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {showFloatingButton && <FloatingAIButton />}
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-10 sm:px-6 lg:px-12">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border/80 pb-6">
           <div className="flex items-center gap-3">
