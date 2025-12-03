@@ -2,7 +2,7 @@
 const prisma = require("../lib/prisma");
 const express = require('express');
 const { requireAuth } = require('../middleware/auth');
-const { generateResumeContent } = require('./resumeGen');
+// LaTeX-based resume generation has been removed in favor of an HTML template
 const PDFGenerator = require('../services/pdfGenerator');
 
 const router = express.Router();
@@ -545,6 +545,12 @@ router.get("/resumes/:id", requireAuth, async (req, res) => {
 router.post("/resumes",requireAuth, async(req,res) => {
   try{
     const { title, template = 'professional' } = req.body;
+    console.log('[ResumeBuilder][REST] Generate resume requested', {
+      userId: req.user.id,
+      title: title || null,
+      template,
+      source: 'rest_api'
+    });
     // Get user data with all related information
     const user = await prisma.user.findUnique({
       where:{id : req.user.id},
@@ -568,14 +574,27 @@ router.post("/resumes",requireAuth, async(req,res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Simple ATS-friendly summary text stored as resume.content.
+    const experiencesCount = Array.isArray(user.experiences) ? user.experiences.length : 0;
+    const yearsLabel = experiencesCount > 0 ? `${experiencesCount}+ years` : 'experience';
+    const topSkills = (Array.isArray(user.skills) ? user.skills : [])
+      .map((s) => s.name)
+      .filter(Boolean)
+      .slice(0, 6)
+      .join(', ') || 'software engineering';
 
-    const resumeContent = generateResumeContent(user,'ats-friendly');
+    const resumeContent = `Software Engineer with ${yearsLabel} in ${topSkills}, seeking full-time software engineering roles.`;
     const resume = await prisma.resume.create({
       data: {
         title: title || `${user.name} - Resume`,
         content: resumeContent,
         userId: req.user.id
       }
+    });
+    console.log('[ResumeBuilder][REST] Resume created', {
+      userId: req.user.id,
+      resumeId: resume.id,
+      title: resume.title
     });
     return res.status(201).json({ resume });
 
@@ -633,31 +652,109 @@ router.options('/resumes/:id/pdf', (req, res) => {
   res.status(200).end();
 });
 
-// Generate PDF from resume
+// Generate PDF from resume using HTML template (Format-1)
 router.get('/resumes/:id/pdf', requireAuth, async (req, res) => {
-  console.log('api hit')
+  console.log('api hit');
   try {
     const resumeId = parseInt(req.params.id);
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: {
+        experiences: true,
+        educations: true,
+        projects: true,
+        skills: true,
+        certifications: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     const resume = await prisma.resume.findFirst({
       where: { 
         id: resumeId, 
         userId: req.user.id 
       },
-      include: {
-        user: {
-          select: {
-            name: true
-          }
-        }
-      }
     });
     
     if (!resume) {
       return res.status(404).json({ message: 'Resume not found' });
     }
 
+    // Build structured data for Format-1 template
+    const links = [
+      user.linkedinUrl,
+      user.githubUrl,
+      user.portfolioUrl,
+      user.hackerrankUrl,
+      user.leetcodeUrl,
+      user.codeforcesUrl,
+      user.codechefUrl,
+      user.geeksforgeeksUrl,
+      user.twitterUrl,
+    ].filter(Boolean);
+
+    const summary = resume.content || '';
+
+    const education = user.educations.map((edu) => ({
+      degree: edu.degree,
+      institution: edu.institution,
+      years: `${edu.startYear} - ${edu.endYear || 'Present'}`,
+      grade: edu.description || '',
+    }));
+
+    const internships = user.experiences.map((exp) => ({
+      role: exp.role,
+      company: exp.company,
+      duration: `${exp.startDate.toISOString().slice(0, 10)} - ${
+        exp.endDate ? exp.endDate.toISOString().slice(0, 10) : 'Present'
+      }`,
+      points: [exp.description].filter(Boolean),
+    }));
+
+    const projects = user.projects.map((proj) => ({
+      name: proj.title,
+      links: [proj.githubUrl, proj.liveUrl].filter(Boolean).join(' | '),
+      points: [proj.description].filter(Boolean),
+    }));
+
+    const certifications = user.certifications.map((cert) => {
+      const parts = [
+        cert.title,
+        cert.issuer,
+        cert.credentialId ? `Credential ID: ${cert.credentialId}` : null,
+      ].filter(Boolean);
+      return parts.join(' - ');
+    });
+
+    const skills = [
+      {
+        category: 'Technical Skills',
+        items: user.skills.map((s) => s.name),
+      },
+    ];
+
+    const extra = [];
+
+    const pdfData = {
+      name: user.name,
+      phone: user.phoneNumber || '',
+      email: user.email,
+      links,
+      summary,
+      education,
+      internships,
+      projects,
+      certifications,
+      skills,
+      extra,
+    };
+
     const pdfGenerator = new PDFGenerator();
-    const pdfBuffer = await pdfGenerator.generatePDFFromLaTeX(resume.content, `resume_${resumeId}`);
+    const pdfBuffer = await pdfGenerator.generatePDF(pdfData, `resume_${resumeId}`);
     // Set CORS headers for PDF - use the same logic as main CORS config
     const origin = req.headers.origin;
     const allowedOrigins = [
@@ -684,7 +781,7 @@ router.get('/resumes/:id/pdf', requireAuth, async (req, res) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
     // Set headers for PDF download with user name
-    const filename = `Resume-${resume.user.name.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+    const filename = `Resume-${user.name.replace(/[^a-z0-9]/gi, '_')}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
     res.setHeader('Content-Length', pdfBuffer.length);
@@ -722,55 +819,6 @@ router.options('/resumes/pdf', (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.status(200).end();
-});
-
-// Generate PDF from LaTeX content directly
-router.post('/resumes/pdf', requireAuth, async (req, res) => {
-  try {
-    const { latexContent, title = 'Resume' } = req.body;
-    
-    if (!latexContent) {
-      return res.status(400).json({ message: 'LaTeX content is required' });
-    }
-
-    const pdfGenerator = new PDFGenerator();
-    const pdfBuffer = await pdfGenerator.generatePDFFromLaTeX(latexContent, 'temp_resume');
-    
-    // Set CORS headers for PDF - use the same logic as main CORS config
-    const origin = req.headers.origin;
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      process.env.FRONTEND_URL,
-      process.env.NEXT_PUBLIC_FRONTEND_URL,
-      /\.vercel\.app$/, // Allow all Vercel deployments
-      /\.netlify\.app$/  // Allow Netlify deployments
-    ].filter(Boolean);
-    
-    // Check if origin is allowed (same logic as main CORS)
-    const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (typeof allowedOrigin === 'string') {
-        return origin === allowedOrigin;
-      } else if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
-      }
-      return false;
-    });
-    
-    res.setHeader('Access-Control-Allow-Origin', isAllowed ? origin : 'http://localhost:3000');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    
-    // Set headers for PDF download
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-    
-    res.send(pdfBuffer);
-  } catch (err) {
-    console.error('PDF generation error:', err);
-    return res.status(500).json({ message: 'Failed to generate PDF' });
-  }
 });
 
 module.exports = router;

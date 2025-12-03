@@ -700,7 +700,13 @@ const createResumeTool = new DynamicStructuredTool({
   }),
   func: async (input) => {
     const userId = ensureUserId();
-    const { generateResumeContent } = require("../profile/resumeGen");
+    // HTML-based PDF generation: create a simple ATS-style summary string
+    console.log('[ResumeBuilder][Bot] create_resume tool invoked', {
+      userId,
+      title: input.title || null,
+      template: input.template || 'ats-friendly',
+      source: 'langgraph_tool'
+    });
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -712,13 +718,94 @@ const createResumeTool = new DynamicStructuredTool({
       }
     });
     if (!user) throw new Error("User not found");
-    const resumeContent = generateResumeContent(user, input.template || 'ats-friendly');
+
+    const experiencesCount = Array.isArray(user.experiences) ? user.experiences.length : 0;
+    const yearsLabel = experiencesCount > 0 ? `${experiencesCount}+ years` : 'experience';
+    const topSkills = (Array.isArray(user.skills) ? user.skills : [])
+      .map((s) => s.name)
+      .filter(Boolean)
+      .slice(0, 6)
+      .join(', ') || 'software engineering';
+
+    // Let AI decide the most relevant 2–3 projects when possible
+    const rawProjects = Array.isArray(user.projects) ? user.projects : [];
+    const projectSummaries = rawProjects.map((p, idx) => ({
+      index: idx,
+      title: p.title,
+      description: p.description,
+      techStack: p.techStack,
+    }));
+
+    let selectedProjectIndexes = [];
+
+    if (projectSummaries.length > 0 && process.env.GOOGLE_API_KEY) {
+      try {
+        const { GoogleGenerativeAI } = require("@google/generative-ai");
+        const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "models/gemini-2.0-flash-lite" });
+
+        const prompt = `
+You are selecting the 2–3 most relevant, impressive projects for a one-page software engineer resume.
+
+Return ONLY valid JSON, no text, with this exact shape:
+{"indexes":[0,2,3]}
+
+Guidelines:
+- Prefer recent, complex, and impact-focused projects.
+- Prefer projects that match typical software engineering roles.
+- Use the "index" field from each project object, not titles.
+
+Projects:
+${JSON.stringify(projectSummaries, null, 2)}
+        `.trim();
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text().trim();
+
+        // Some models still wrap JSON in ```json fences; strip them defensively.
+        let jsonText = text;
+        const fenced = jsonText.match(/```(?:json)?([\s\S]*?)```/i);
+        if (fenced) {
+          jsonText = fenced[1].trim();
+        }
+
+        const parsed = JSON.parse(jsonText);
+        if (parsed && Array.isArray(parsed.indexes)) {
+          selectedProjectIndexes = parsed.indexes
+            .filter((i) => Number.isInteger(i) && i >= 0 && i < rawProjects.length)
+            .slice(0, 3);
+        }
+      } catch (e) {
+        console.error("AI project selection failed, falling back to first 3:", e);
+      }
+    }
+
+    // Fallback: if AI failed or returned nothing, just take first 3
+    if (selectedProjectIndexes.length === 0) {
+      selectedProjectIndexes = rawProjects.map((_, idx) => idx).slice(0, 3);
+    }
+
+    const topProjects = selectedProjectIndexes
+      .map((i) => rawProjects[i])
+      .filter(Boolean)
+      .map((p) => p.title);
+
+    const projectsLine = topProjects.length
+      ? ` Key projects: ${topProjects.join(', ')}.`
+      : '';
+
+    const resumeContent = `Software Engineer with ${yearsLabel} in ${topSkills}, seeking full-time software engineering roles.${projectsLine}`;
     const resume = await prisma.resume.create({
       data: {
         title: input.title || `${user.name} - Resume`,
         content: resumeContent,
         userId
       }
+    });
+    console.log('[ResumeBuilder][Bot] Resume created', {
+      userId,
+      resumeId: resume.id,
+      title: resume.title
     });
     // Return structured data so LangGraph can merge resumeId into state
     return {

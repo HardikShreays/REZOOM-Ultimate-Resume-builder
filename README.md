@@ -74,8 +74,7 @@
 - **🐬 MySQL** - Relational database
 - **🔐 JWT** - JSON Web Token authentication
 - **🛡️ Bcrypt** - Password hashing
-- **📄 Puppeteer** - PDF generation from LaTeX content
-- **📝 LaTeX** - Professional document formatting
+- **📄 Puppeteer** - HTML-based PDF generation (with `puppeteer-core` + `@sparticuz/chromium`)
 
 ### Development Tools
 - **📝 ESLint** - Code linting and formatting
@@ -184,14 +183,12 @@ REZOOM - The Ultimate Resume Builder/
 │   ├── middleware/                 # Custom middleware
 │   │   └── auth.js                 # JWT authentication middleware
 │   ├── profile/                    # Profile management routes
-│   │   ├── profile.js              # User profile CRUD operations
-│   │   └── resumeGen.js            # LaTeX resume generation
+│   │   └── profile.js              # User profile CRUD operations
 │   ├── services/                   # Business logic services
-│   │   └── pdfGenerator.js         # PDF generation with Puppeteer
+│   │   └── pdfGenerator.js         # HTML-based PDF generation with Puppeteer
 │   ├── lib/                        # Database connection
 │   ├── migrations/                 # Database migrations
 │   ├── temp/                       # Temporary files for PDF generation
-│   ├── resume.cls                  # LaTeX resume template
 │   └── schema.prisma              # Database schema
 └── README.md                       # Project documentation
 ```
@@ -317,24 +314,23 @@ The project uses a modern component library built with:
 
 ## 📄 PDF Generation Technology
 
-REZOOM uses advanced PDF generation technology to create professional resumes:
+REZOOM uses an HTML + CSS pipeline rendered through Puppeteer to create professional, ATS-friendly resumes:
 
-### LaTeX to PDF Pipeline
-1. **Profile Data Collection** - User profile information is gathered
-2. **LaTeX Generation** - Custom LaTeX templates are populated with user data
-3. **HTML Conversion** - LaTeX content is converted to HTML for rendering
-4. **PDF Generation** - Puppeteer renders HTML to high-quality PDF
+1. **Profile Data Collection** - User profile information is gathered from the database
+2. **Structured JSON Assembly** - Profile data is converted to a structured JSON object
+3. **HTML Rendering** - A clean, semantic HTML + CSS template (Format-1) is populated with this data
+4. **PDF Generation** - `puppeteer-core` with `@sparticuz/chromium` renders the HTML to a high-quality A4 PDF
 5. **Custom Naming** - PDFs are named with format `Resume-{UserName}.pdf`
 
-### Available Templates
-- **ATS-Friendly**: Clean, professional format optimized for ATS systems
-- **Professional**: Modern professional format with enhanced styling
-- **Creative**: Creative format with visual elements
+### Format-1 Template
+- **ATS-Friendly**: Clean, single-column layout with semantic sections
+- **Typography**: Arial, 12px body text, 20px uppercase name heading, 11px contact line
+- **Sections**: Objective / Summary, Education, Experience, Projects, Certifications, Skills, Extras
+- **Structure**: Simple lists and a 2-column skills table with tight bullet spacing
 
 ### Features
-- **High-Quality Output**: 300 DPI PDF generation
-- **A4 Format**: Standard resume paper size
-- **Professional Styling**: Times New Roman font, proper margins
+- **High-Quality Output**: A4 PDF with proper margins (`0.5in` on all sides)
+- **Semantic HTML**: No decorative elements that confuse ATS systems
 - **Browser Preview**: View PDFs in browser before downloading
 - **Secure Downloads**: Protected by JWT authentication
 

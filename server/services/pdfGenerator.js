@@ -1,12 +1,15 @@
-const puppeteer = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
-const fs = require('fs');
-const path = require('path');
+const puppeteer = require("puppeteer-core");
+const chromium = require("@sparticuz/chromium");
+const fs = require("fs");
+const path = require("path");
 
 class PDFGenerator {
   constructor() {
-    // Use /tmp directory for Vercel serverless environment
-    this.outputDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, '../temp');
+    this.outputDir =
+      process.env.NODE_ENV === "production"
+        ? "/tmp"
+        : path.join(__dirname, "../temp");
+
     this.ensureOutputDir();
   }
 
@@ -14,310 +17,360 @@ class PDFGenerator {
     if (!fs.existsSync(this.outputDir)) {
       try {
         fs.mkdirSync(this.outputDir, { recursive: true });
-      } catch (error) {
-        // If we can't create the directory, use /tmp as fallback
-        this.outputDir = '/tmp';
-        console.log('Using /tmp directory for PDF generation');
+      } catch {
+        this.outputDir = "/tmp";
       }
     }
   }
 
-  async generatePDFFromLaTeX(latexContent, filename = 'resume') {
+  /**
+   * Public API: generate a PDF from structured resume data.
+   * `data` is a JSON object:
+   * {
+   *   name, phone, email, links[],
+   *   summary,
+   *   education[], internships[], projects[],
+   *   certifications[], skills[], extra[]
+   * }
+   */
+  async generatePDF(data, filename = "resume") {
+    const htmlContent = this.createHTML(data);
+    return this._generatePDFFromHTML(htmlContent, filename);
+  }
+
+  /**
+   * Internal helper to render given HTML content into a PDF buffer.
+   */
+  async _generatePDFFromHTML(htmlContent, filename = "resume") {
     let browser;
     try {
-      // Create HTML content with LaTeX rendering
-      const htmlContent = this.createHTMLWithLaTeX(latexContent);
+      const isProduction = process.env.NODE_ENV === "production";
 
-      // Generate PDF using Puppeteer with serverless-compatible chromium
-      const isProduction = process.env.NODE_ENV === 'production';
-      
-      const launchArgs = isProduction 
+      const launchArgs = isProduction
         ? [
             ...chromium.args,
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-accelerated-2d-canvas',
-            '--no-first-run',
-            '--no-zygote',
-            '--single-process',
-            '--disable-gpu'
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--single-process",
+            "--disable-gpu",
           ]
         : [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-accelerated-2d-canvas',
-            '--no-first-run',
-            '--no-zygote',
-            '--single-process',
-            '--disable-gpu'
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--single-process",
+            "--disable-gpu",
           ];
 
       const launchOptions = {
         headless: true,
-        args: launchArgs
+        args: launchArgs,
       };
 
       if (isProduction) {
         launchOptions.executablePath = await chromium.executablePath();
       } else {
-        // Use the locally installed Chrome with puppeteer-core
-        launchOptions.channel = 'chrome';
+        launchOptions.channel = "chrome";
       }
-      
+
       browser = await puppeteer.launch(launchOptions);
-
       const page = await browser.newPage();
-      
-      // Set page size to A4
+
       await page.setViewport({
-        width: 794, // A4 width in pixels at 96 DPI
-        height: 1123, // A4 height in pixels at 96 DPI
-        deviceScaleFactor: 1
+        width: 794,
+        height: 1123,
+        deviceScaleFactor: 1,
       });
 
-      // Set content directly instead of using file:// protocol
-      await page.setContent(htmlContent, {
-        waitUntil: 'networkidle0'
-      });
+      await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
-      // Generate PDF
       const pdfBuffer = await page.pdf({
-        format: 'A4',
-        printBackground: true,
+        format: "A4",
         margin: {
-          top: '0.5in',
-          right: '0.5in',
-          bottom: '0.5in',
-          left: '0.5in'
-        }
+          top: "0.5in",
+          right: "0.5in",
+          bottom: "0.5in",
+          left: "0.5in",
+        },
+        printBackground: true,
       });
 
       await browser.close();
-
       return pdfBuffer;
-
-    } catch (error) {
-      console.error('PDF generation error:', error);
-      throw new Error('Failed to generate PDF');
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      throw new Error("Failed to generate PDF");
     } finally {
-      // Ensure browser is closed even if an error occurs
       if (browser) {
         try {
           await browser.close();
-        } catch (closeError) {
-          console.error('Error closing browser:', closeError);
-        }
+        } catch {}
       }
     }
   }
 
-  createHTMLWithLaTeX(latexContent) {
-    // For now, we'll create a simple HTML representation
-    // In a production environment, you'd want to use a LaTeX-to-HTML converter
-    // like MathJax or KaTeX for proper LaTeX rendering
-    
+  // ------------------------------------------------------------
+  // FORMAT-1 HTML TEMPLATE (ATS-friendly, A4, clean single page)
+  // ------------------------------------------------------------
+  createHTML(data) {
+    const safe = (value) => (value == null ? "" : String(value));
+    const list = (arr) => (Array.isArray(arr) ? arr : []);
+    const normalizeUrl = (value) => {
+      if (!value) return "";
+      const trimmed = String(value).trim();
+      if (!trimmed) return "";
+      return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    };
+    const linkLabel = (value) => {
+      const friendlyNames = {
+        github: "GitHub",
+        codechef: "CodeChef",
+        geeksforgeeks: "GeeksforGeeks",
+        hackerrank: "HackerRank",
+        codeforces: "Codeforces",
+        leetcode: "LeetCode",
+        linkedin: "LinkedIn",
+        vercel: "Vercel",
+        netlify: "Netlify",
+        devfolio: "Devfolio",
+        behance: "Behance",
+        dribbble: "Dribbble",
+        medium: "Medium",
+      };
+      try {
+        const normalized = normalizeUrl(value);
+        if (!normalized) return "";
+        const hostname = new URL(normalized).hostname.replace(/^www\./i, "");
+        const parts = hostname.split(".").filter(Boolean);
+        const base =
+          parts.length >= 2 ? parts[parts.length - 2] : parts[0] || hostname;
+        const friendly = friendlyNames[base.toLowerCase()];
+        if (friendly) return friendly;
+        return base.charAt(0).toUpperCase() + base.slice(1);
+      } catch {
+        return value;
+      }
+    };
+    const formatPhone = (value) => {
+      if (!value) return "";
+      const digitsOnly = String(value).replace(/[^\d+]/g, "");
+      return `<a href="tel:${digitsOnly}">${safe(value)}</a>`;
+    };
+    const formatLink = (value) => {
+      const href = normalizeUrl(value);
+      if (!href) return "";
+      return `<a href="${href}">${linkLabel(value)}</a>`;
+    };
+
+    const name = safe(data.name);
+    const phone = safe(data.phone);
+    const email = safe(data.email);
+    const links = list(data.links).map(safe).filter(Boolean);
+
+    const summary = safe(data.summary);
+    const education = list(data.education);
+    const internships = list(data.internships);
+    // Limit projects to top 3 to help keep resume within a single page
+    const projects = list(data.projects).slice(0, 3);
+    const certifications = list(data.certifications);
+    const skills = list(data.skills);
+    const extra = list(data.extra);
+
     return `
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Preview</title>
-    <style>
-        body {
-            font-family: 'Times New Roman', serif;
-            font-size: 12px;
-            line-height: 1.4;
-            color: #000;
-            margin: 0;
-            padding: 20px;
-            background: white;
-        }
-        
-        .latex-content {
-            white-space: pre-wrap;
-            font-family: 'Courier New', monospace;
-            font-size: 10px;
-            line-height: 1.2;
-        }
-        
-        .resume-header {
-            text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .resume-header h1 {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 0;
-            text-transform: uppercase;
-        }
-        
-        .resume-header p {
-            font-size: 11px;
-            margin: 5px 0;
-        }
-        
-        .section {
-            margin-bottom: 15px;
-        }
-        
-        .section-title {
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            border-bottom: 1px solid #333;
-            margin-bottom: 8px;
-            padding-bottom: 2px;
-        }
-        
-        .experience-item, .education-item, .project-item {
-            margin-bottom: 10px;
-            padding-left: 10px;
-        }
-        
-        .item-title {
-            font-weight: bold;
-            font-size: 11px;
-        }
-        
-        .item-company, .item-institution {
-            font-style: italic;
-            font-size: 10px;
-        }
-        
-        .item-date {
-            font-size: 10px;
-            color: #666;
-        }
-        
-        .item-description {
-            font-size: 10px;
-            margin-top: 3px;
-        }
-        
-        .skills-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-        }
-        
-        .skills-table td {
-            padding: 2px 5px;
-            border: none;
-        }
-        
-        .skills-table td:first-child {
-            font-weight: bold;
-            width: 30%;
-        }
-        
-        .page-break {
-            page-break-before: always;
-        }
-        
-        @media print {
-            body {
-                margin: 0;
-                padding: 0;
-            }
-        }
-    </style>
+<meta charset="UTF-8" />
+<title>Resume</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #000;
+    margin: 0;
+    padding: 35px;
+    line-height: 1.35;
+  }
+
+  h1 {
+    font-size: 20px;
+    margin: 0;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .contact {
+    margin-top: 3px;
+    font-size: 11px;
+    color: #333;
+  }
+
+  .section {
+    margin-top: 18px;
+  }
+
+  .section-title {
+    font-weight: bold;
+    font-size: 13px;
+    border-bottom: 1px solid #000;
+    padding-bottom: 3px;
+    margin-bottom: 8px;
+  }
+
+  .item {
+    margin-bottom: 10px;
+  }
+
+  .item-title {
+    font-weight: bold;
+    font-size: 12px;
+  }
+
+  .item-subtitle {
+    font-style: italic;
+    font-size: 11px;
+    color: #444;
+  }
+
+  .item-date {
+    font-size: 11px;
+    color: #666;
+  }
+
+  .item-points {
+    margin-top: 4px;
+    margin-left: 15px;
+  }
+
+  .item-points li {
+    margin-bottom: 3px;
+  }
+
+  .skills-table td {
+    font-size: 11px;
+    padding: 2px 4px;
+    vertical-align: top;
+  }
+</style>
 </head>
+
 <body>
-    ${this.convertLaTeXToHTML(latexContent)}
+
+  <h1>${name}</h1>
+  <div class="contact">
+    ${[
+      phone && formatPhone(phone),
+      email && `<a href="mailto:${safe(email)}">${safe(email)}</a>`,
+      ...links.map((url) => formatLink(url)).filter(Boolean),
+    ]
+      .filter(Boolean)
+      .join(" • ")}
+  </div>
+
+  <div class="section">
+    <div class="section-title">PROFESSIONAL SUMMARY</div>
+    <div>${summary}</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">EDUCATION</div>
+    ${education
+      .map(
+        (ed) => `
+      <div class="item">
+        <div class="item-title">${safe(ed.degree)}</div>
+        <div class="item-subtitle">${safe(ed.institution)}</div>
+        <div class="item-date">${safe(ed.years)}</div>
+        ${
+          ed.grade
+            ? `<div class="item-date">Grade: ${safe(ed.grade)}</div>`
+            : ""
+        }
+      </div>
+    `
+      )
+      .join("")}
+  </div>
+
+  <div class="section">
+    <div class="section-title">INTERNSHIPS</div>
+    ${internships
+      .map(
+        (i) => `
+      <div class="item">
+        <div class="item-title">${safe(i.role)}</div>
+        <div class="item-subtitle">${safe(i.company)}</div>
+        <div class="item-date">${safe(i.duration)}</div>
+        <ul class="item-points">
+          ${list(i.points).map((p) => `<li>${safe(p)}</li>`).join("")}
+        </ul>
+      </div>
+    `
+      )
+      .join("")}
+  </div>
+
+  <div class="section">
+    <div class="section-title">PROJECTS</div>
+    ${projects
+      .map(
+        (p) => `
+      <div class="item">
+        <div class="item-title">${safe(p.name)}</div>
+        <div class="item-subtitle">${
+          safe(p.links)
+            .split("|")
+            .map((chunk) => chunk.trim())
+            .filter(Boolean)
+            .map((chunk) => formatLink(chunk) || safe(chunk))
+            .join(" • ")
+        }</div>
+        <ul class="item-points">
+          ${list(p.points).map((pt) => `<li>${safe(pt)}</li>`).join("")}
+        </ul>
+      </div>
+    `
+      )
+      .join("")}
+  </div>
+
+  <div class="section">
+    <div class="section-title">CERTIFICATIONS</div>
+    <ul class="item-points">
+      ${certifications.map((c) => `<li>${safe(c)}</li>`).join("")}
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-title">SKILLS</div>
+    <table class="skills-table">
+      ${skills
+        .map(
+          (s) => `
+        <tr>
+          <td><strong>${safe(s.category)}</strong></td>
+          <td>${list(s.items).map(safe).join(", ")}</td>
+        </tr>
+      `
+        )
+        .join("")}
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">EXTRA-CURRICULAR ACTIVITIES</div>
+    <ul class="item-points">
+      ${extra.map((e) => `<li>${safe(e)}</li>`).join("")}
+    </ul>
+  </div>
+
 </body>
 </html>
     `;
   }
 
-  convertLaTeXToHTML(latexContent) {
-    // Basic LaTeX to HTML conversion
-    // This is a simplified version - for production, consider using a proper LaTeX parser
-    
-    let html = latexContent;
-    
-    // Strip LaTeX comments (ignore escaped \%)
-    html = html.replace(/(^|[^\\])%.*$/gm, '$1');
-    
-    // Remove LaTeX document structure and preamble commands
-    html = html.replace(/\\documentclass\{.*?\}/g, '');
-    html = html.replace(/\\usepackage(?:\[[^\]]*\])?\{[^}]*\}/g, '');
-    // Remove newcommand definitions like \newcommand{\tab}[1]{...}
-    html = html.replace(/\\newcommand\s*\{[^}]*\}\s*(?:\[[^\]]*\])?\s*\{[^}]*\}/g, '');
-    
-    // Remove common layout commands that don't translate to HTML
-    html = html.replace(/\\vspace\{[^}]*\}/g, '');
-    html = html.replace(/\\hfill/g, '');
-    html = html.replace(/\\hrule/g, '');
-    
-    // Clean up leftover helper macro bodies (rare): lines containing only {\hspace...}
-    html = html.replace(/^\{\\hspace[^}]*\}$/gm, '');
-
-    // Heading info
-    html = html.replace(/\\name\{([^}]+)\}/g, '<div class="resume-header"><h1>$1</h1>');
-    html = html.replace(/\\address\{([^}]+)\}/g, '<p>$1</p></div>');
-    html = html.replace(/\\begin\{document\}/g, '');
-    html = html.replace(/\\end\{document\}/g, '');
-    
-    // Convert sections
-    html = html.replace(/\\begin\{rSection\}\{([^}]+)\}/g, '<div class="section"><div class="section-title">$1</div>');
-    html = html.replace(/\\end\{rSection\}/g, '</div>');
-    
-    // Convert subsections
-    html = html.replace(/\\begin\{rSubsection\}\{([^}]+)\}\{([^}]+)\}\{([^}]*)\}\{([^}]*)\}/g, 
-        '<div class="experience-item"><div class="item-title">$1</div><div class="item-company">$3</div><div class="item-date">$2</div>');
-    html = html.replace(/\\end\{rSubsection\}/g, '</div>');
-    
-    // Convert items
-    html = html.replace(/\\item\s+(.+)/g, '<div class="item-description">• $1</div>');
-    
-    // Convert bold/italic
-    html = html.replace(/\\textbf\{([^}]+)\}/g, '<strong>$1</strong>');
-    html = html.replace(/\\bf\s+([^{]+)/g, '<strong>$1</strong>');
-    html = html.replace(/\\textit\{([^}]+)\}/g, '<em>$1</em>');
-    html = html.replace(/\\em\s+([^{]+)/g, '<em>$1</em>');
-    
-    // Convert tabular blocks robustly (handle column specs/newlines)
-    html = html.replace(/\\begin\{tabular\}([\s\S]*?)\\end\{tabular\}/g, (match, inner) => {
-      let content = inner;
-      // Remove column spec if present: starts with { ... }
-      if (content.trim().startsWith('{')) {
-        const idx = content.indexOf('}');
-        if (idx !== -1) content = content.slice(idx + 1);
-      }
-      // Normalize whitespace
-      content = content.replace(/\r?\n+/g, '\n').trim();
-      // Split into rows by \\ (two backslashes)
-      const rowList = content.split(/\\\\\s*/).map(r => r.trim()).filter(Boolean);
-      if (rowList.length === 0) return '<table class="skills-table"></table>';
-      const trs = rowList.map(row => {
-        const cols = row.split(/\s*&\s*/).map(c => c.trim()).filter(Boolean);
-        const tds = cols.map(c => `<td>${c}</td>`).join('');
-        return `<tr>${tds}</tr>`;
-      }).join('');
-      return `<table class="skills-table">${trs}</table>`;
-    });
-    
-    // Convert href links
-    html = html.replace(/\\href\{([^}]+)\}\{([^}]+)\}/g, '<a href="$1">$2</a>');
-    
-    // Clean up line breaks
-    html = html.replace(/\\\\/g, '<br>');
-    html = html.replace(/\n\s*\n/g, '<br><br>');
-    html = html.replace(/\n/g, ' ');
-    
-    // Collapse extra spaces
-    html = html.replace(/\s+/g, ' ');
-    
-    return html;
-  }
-
-  async savePDF(pdfBuffer, filename) {
+  savePDF(pdfBuffer, filename) {
     const filePath = path.join(this.outputDir, `${filename}.pdf`);
     fs.writeFileSync(filePath, pdfBuffer);
     return filePath;
@@ -325,14 +378,9 @@ class PDFGenerator {
 
   cleanupFile(filePath) {
     try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    } catch (error) {
-      console.error('Cleanup error:', error);
-    }
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch {}
   }
 }
 
 module.exports = PDFGenerator;
-
