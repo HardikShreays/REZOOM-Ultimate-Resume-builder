@@ -1,5 +1,3 @@
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
 import fs from "fs";
 import path from "path";
 
@@ -42,71 +40,55 @@ class PDFGenerator {
    * Internal helper to render given HTML content into a PDF buffer.
    */
   async _generatePDFFromHTML(htmlContent, filename = "resume") {
-    let browser;
+    const endpoint =
+      process.env.PDF_SERVICE_URL || process.env.BROWSERLESS_PDF_URL;
+
+    if (!endpoint) {
+      throw new Error(
+        "PDF service URL not configured. Set PDF_SERVICE_URL or BROWSERLESS_PDF_URL in your environment."
+      );
+    }
+
     try {
-      const isProduction = process.env.NODE_ENV === "production";
-
-      const launchArgs = isProduction
-        ? [
-            ...chromium.args,
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--single-process",
-            "--disable-gpu",
-          ]
-        : [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--single-process",
-            "--disable-gpu",
-          ];
-
-      const launchOptions = {
-        headless: true,
-        args: launchArgs,
-      };
-
-      if (isProduction) {
-        launchOptions.executablePath = await chromium.executablePath();
-      } else {
-        launchOptions.channel = "chrome";
-      }
-
-      browser = await puppeteer.launch(launchOptions);
-      const page = await browser.newPage();
-
-      await page.setViewport({
-        width: 794,
-        height: 1123,
-        deviceScaleFactor: 1,
-      });
-
-      await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-
-      const pdfBuffer = await page.pdf({
-        format: "A4",
-        margin: {
-          top: "0.5in",
-          right: "0.5in",
-          bottom: "0.5in",
-          left: "0.5in",
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Optional API key header if your provider needs it
+          ...(process.env.PDF_SERVICE_API_KEY && {
+            "x-api-key": process.env.PDF_SERVICE_API_KEY,
+          }),
         },
-        printBackground: true,
+        body: JSON.stringify({
+          // Most hosted Chrome/PDF services (e.g. Browserless) accept raw HTML
+          html: htmlContent,
+          options: {
+            // Mirror our previous Puppeteer settings
+            printBackground: true,
+            format: "A4",
+            margin: {
+              top: "0.5in",
+              right: "0.5in",
+              bottom: "0.5in",
+              left: "0.5in",
+            },
+          },
+          filename,
+        }),
       });
 
-      await browser.close();
-      return pdfBuffer;
-    } catch (err) {
-      console.error("PDF generation error:", err);
-      throw new Error("Failed to generate PDF");
-    } finally {
-      if (browser) {
-        try {
-          await browser.close();
-        } catch {}
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(
+          `Remote PDF service error: ${response.status} ${response.statusText} ${text}`
+        );
       }
+
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    } catch (err) {
+      console.error("PDF generation error (remote service):", err);
+      throw new Error("Failed to generate PDF");
     }
   }
 
