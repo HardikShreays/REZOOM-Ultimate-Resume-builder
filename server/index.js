@@ -3,7 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs/promises';
 // pdf-parse v1.1.1 exports a function directly; this will always be a function
-import pdfParse from 'pdf-parse';
+// Import the core parser implementation directly to avoid test-file lookups in some environments
+import pdfParse from 'pdf-parse/lib/pdf-parse.js';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import prisma from './lib/prisma.js';
