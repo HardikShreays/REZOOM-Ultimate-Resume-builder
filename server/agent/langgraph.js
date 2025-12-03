@@ -68,6 +68,82 @@ const getProfileTool = new DynamicStructuredTool({
   },
 });
 
+// Parse and update social links from free-form text
+const parseAndUpdateSocialLinksTool = new DynamicStructuredTool({
+  name: "parse_and_update_social_links",
+  description: "Given any free-form text, extract the user's social/profile links (GitHub, LinkedIn, portfolio/personal website, Twitter, LeetCode, Codeforces, CodeChef, HackerRank, GeeksforGeeks) and update the corresponding fields on the user profile in the database. Only update fields for links that are actually present in the text.",
+  schema: z.object({
+    text: z.string().describe("The raw text that may contain one or more social/profile URLs."),
+  }),
+  func: async (input) => {
+    const userId = ensureUserId();
+    const text = input.text || "";
+
+    // Basic URL extraction
+    const urlRegex = /https?:\/\/[^\s)]+/gi;
+    const urls = text.match(urlRegex) || [];
+
+    const updateData = {};
+
+    for (const rawUrl of urls) {
+      let url = rawUrl.trim();
+      // Strip trailing punctuation
+      url = url.replace(/[),.]+$/, "");
+
+      try {
+        const parsed = new URL(url);
+        const host = parsed.hostname.toLowerCase();
+
+        if (host.includes("github.com")) {
+          updateData.githubUrl = url;
+        } else if (host.includes("linkedin.com")) {
+          updateData.linkedinUrl = url;
+        } else if (host.includes("twitter.com") || host.includes("x.com")) {
+          updateData.twitterUrl = url;
+        } else if (host.includes("leetcode.com")) {
+          updateData.leetcodeUrl = url;
+        } else if (host.includes("codeforces.com")) {
+          updateData.codeforcesUrl = url;
+        } else if (host.includes("codechef.com")) {
+          updateData.codechefUrl = url;
+        } else if (host.includes("hackerrank.com")) {
+          updateData.hackerrankUrl = url;
+        } else if (host.includes("geeksforgeeks.org")) {
+          updateData.geeksforgeeksUrl = url;
+        } else {
+          // Treat any other valid URL as a potential portfolio/personal site
+          // Only set portfolioUrl if we don't already have a more specific match from this text
+          if (!updateData.portfolioUrl) {
+            updateData.portfolioUrl = url;
+          }
+        }
+      } catch (e) {
+        // Ignore invalid URLs
+        continue;
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return "No recognizable social/profile links were found in the provided text.";
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    return JSON.stringify(
+      {
+        message: "Social/profile links parsed and updated successfully.",
+        updatedFields: Object.keys(updateData),
+        user,
+      },
+      null,
+      2
+    );
+  },
+});
+
 const updateProfileTool = new DynamicStructuredTool({
   name: "update_user_profile",
   description: "Update user profile information (name, phone, social links). Ensure all URLs are valid and properly formatted. Do NOT modify or invent data.",
@@ -547,6 +623,7 @@ const deleteResumeTool = new DynamicStructuredTool({
 const tools = [
   getProfileTool,
   updateProfileTool,
+  parseAndUpdateSocialLinksTool,
   createExperienceTool,
   getExperiencesTool,
   updateExperienceTool,
