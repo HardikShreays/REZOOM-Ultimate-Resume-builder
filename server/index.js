@@ -142,8 +142,9 @@ app.post('/chat', requireAuth, async (req, res) => {
 });
 
 // Resume upload endpoint
+// On Vercel and many serverless platforms, only /tmp is writable.
 import multer from 'multer';
-const upload = multer({ dest: 'temp/', limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
+const upload = multer({ dest: '/tmp', limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
 
 app.post('/chat/upload-resume', requireAuth, upload.single('resume'), async (req, res) => {
   try {
