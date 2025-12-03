@@ -28,7 +28,8 @@ import {
   Twitter,
   Globe,
   Save,
-  X
+  X,
+  Download,
 } from "lucide-react";
 import Link from 'next/link';
 import api from '@/services/api';
@@ -154,6 +155,31 @@ export default function ProfilePage() {
     router.push('/');
   };
 
+  const handleExportProfile = async () => {
+    try {
+      if (!profileData) return;
+      const response = await api.get('/profile/export', {
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const safeName = (profileData.name || 'profile')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-');
+      link.href = url;
+      link.download = `rezoom-profile-${safeName}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export profile:', err);
+      alert('Failed to export profile. Please try again.');
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -246,9 +272,15 @@ export default function ProfilePage() {
     <DashboardShell user={user} onLogout={handleLogout} backHref="/dashboard" backLabel="Dashboard">
       <div className="max-w-6xl mx-auto space-y-12 px-4 py-10 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">All About Me</h1>
-          <p className="text-xl text-gray-600">Your complete professional profile</p>
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">All About Me</h1>
+            <p className="text-xl text-gray-600">Your complete professional profile</p>
+          </div>
+          <Button variant="outline" onClick={handleExportProfile} disabled={!profileData}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Profile
+          </Button>
         </div>
 
         {/* Profile Stats */}
