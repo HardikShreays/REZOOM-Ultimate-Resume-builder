@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 class JsonDatabase {
   constructor() {
@@ -108,5 +108,5 @@ class JsonDatabase {
   }
 }
 
-module.exports = new JsonDatabase();
+export default new JsonDatabase();
 

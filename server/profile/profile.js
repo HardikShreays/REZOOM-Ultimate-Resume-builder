@@ -1,9 +1,9 @@
 // server/profile/profile.js
-const prisma = require("../lib/prisma");
-const express = require('express');
-const { requireAuth } = require('../middleware/auth');
+import express from 'express';
+import prisma from "../lib/prisma.js";
+import { requireAuth } from '../middleware/auth.js';
 // LaTeX-based resume generation has been removed in favor of an HTML template
-const PDFGenerator = require('../services/pdfGenerator');
+import PDFGenerator from '../services/pdfGenerator.js';
 
 const router = express.Router();
 
@@ -821,4 +821,4 @@ router.options('/resumes/pdf', (req, res) => {
   res.status(200).end();
 });
 
-module.exports = router;
+export default router;

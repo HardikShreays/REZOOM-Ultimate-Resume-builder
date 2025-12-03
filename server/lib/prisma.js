@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 
 // Ensure single PrismaClient instance across hot-reloads in dev
 let prismaClient;
@@ -6,13 +6,14 @@ let prismaClient;
 if (process.env.NODE_ENV === 'production') {
   prismaClient = new PrismaClient();
 } else {
-  if (!global.__prisma__) {
-    global.__prisma__ = new PrismaClient();
+  const globalAny = globalThis;
+  if (!globalAny.__prisma__) {
+    globalAny.__prisma__ = new PrismaClient();
   }
-  prismaClient = global.__prisma__;
+  prismaClient = globalAny.__prisma__;
 }
 
-module.exports = prismaClient;
+export default prismaClient;
 
 
 

@@ -1,11 +1,11 @@
 // server/automation/langgraph.js
-const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
-const { StateGraph, MessagesAnnotation, Annotation } = require("@langchain/langgraph");
-const { ToolNode, toolsConditional } = require("@langchain/langgraph/prebuilt");
-const { DynamicStructuredTool } = require("@langchain/core/tools");
-const { HumanMessage, AIMessage, SystemMessage } = require("@langchain/core/messages");
-const { z } = require("zod");
-const prisma = require("../lib/prisma");
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { StateGraph, MessagesAnnotation, Annotation } from "@langchain/langgraph";
+import { ToolNode, toolsConditional } from "@langchain/langgraph/prebuilt";
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import { HumanMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
+import { z } from "zod";
+import prisma from "../lib/prisma.js";
 
 // Lightweight fetch helper that works both in Node 18+ (global fetch)
 // and older Node versions via dynamic import of node-fetch.
@@ -740,7 +740,7 @@ const createResumeTool = new DynamicStructuredTool({
 
     if (projectSummaries.length > 0 && process.env.GOOGLE_API_KEY) {
       try {
-        const { GoogleGenerativeAI } = require("@google/generative-ai");
+        const { GoogleGenerativeAI } = await import("@google/generative-ai");
         const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
         const model = genAI.getGenerativeModel({ model: "models/gemini-2.0-flash-lite" });
 
@@ -1027,7 +1027,7 @@ function convertToLangChainMessages(messages) {
 }
 
 // 4. Helper used by Express route
-async function runChat(messages, options = {}) {
+export async function runChat(messages, options = {}) {
   // messages: [{ role: "user" | "assistant" | "system", content: string }, ...]
   // options: { userId?, scrapedData?, resumeId?, currentStep? }
   
@@ -1056,7 +1056,3 @@ async function runChat(messages, options = {}) {
     },
   };
 }
-
-module.exports = {
-  runChat,
-};

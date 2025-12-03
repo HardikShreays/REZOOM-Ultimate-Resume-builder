@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 function getTokenFromHeader(req) {
   const authHeader = req.headers['authorization'] || '';
@@ -8,7 +8,7 @@ function getTokenFromHeader(req) {
   return null;
 }
 
-function requireAuth(req, res, next) {
+export function requireAuth(req, res, next) {
   const token = getTokenFromHeader(req);
   if (!token) {
     return res.status(401).json({ message: 'Missing Authorization token' });
@@ -22,13 +22,11 @@ function requireAuth(req, res, next) {
   }
 }
 
-function signToken(payload, options = {}) {
+export function signToken(payload, options = {}) {
   const secret = process.env.JWT_SECRET || 'dev_secret';
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
   return jwt.sign(payload, secret, { expiresIn, ...options });
 }
-
-module.exports = { requireAuth, signToken };
 
 
 

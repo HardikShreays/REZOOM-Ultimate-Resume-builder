@@ -1,7 +1,7 @@
-const puppeteer = require("puppeteer-core");
-const chromium = require("@sparticuz/chromium");
-const fs = require("fs");
-const path = require("path");
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
+import fs from "fs";
+import path from "path";
 
 class PDFGenerator {
   constructor() {
@@ -383,4 +383,4 @@ class PDFGenerator {
   }
 }
 
-module.exports = PDFGenerator;
+export default PDFGenerator;

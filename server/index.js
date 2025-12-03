@@ -1,14 +1,12 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const fs = require('fs/promises');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import fs from 'fs/promises';
 // pdf-parse v1.1.1 exports a function directly; this will always be a function
-const pdfParse = require('pdf-parse');
+import pdfParse from 'pdf-parse';
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const prisma = require('./lib/prisma');
-
-dotenv.config();
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import prisma from './lib/prisma.js';
 
 const genAI = process.env.GOOGLE_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY) : null;
 
@@ -57,15 +55,15 @@ app.use(express.json());
 app.get("/", (req, res) => res.send("Backend running 🚀"));
 
 // Auth routes
-const authRouter = require('./routes/auth');
+import authRouter from './routes/auth.js';
 app.use('/auth', authRouter);
 // profile router
-const profileRouter = require('./profile/profile')
+import profileRouter from './profile/profile.js';
 app.use('/profile', profileRouter);
 
 // Chat/AI agent routes
-const { requireAuth } = require('./middleware/auth');
-const { runChat } = require('./agent/langgraph');
+import { requireAuth } from './middleware/auth.js';
+import { runChat } from './agent/langgraph.js';
 
 app.post('/chat', requireAuth, async (req, res) => {
   try {
@@ -143,7 +141,7 @@ app.post('/chat', requireAuth, async (req, res) => {
 });
 
 // Resume upload endpoint
-const multer = require('multer');
+import multer from 'multer';
 const upload = multer({ dest: 'temp/', limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
 
 app.post('/chat/upload-resume', requireAuth, upload.single('resume'), async (req, res) => {

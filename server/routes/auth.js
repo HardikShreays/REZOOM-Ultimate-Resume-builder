@@ -1,7 +1,7 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const prisma = require('../lib/prisma');
-const { requireAuth, signToken } = require('../middleware/auth');
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import prisma from '../lib/prisma.js';
+import { requireAuth, signToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -79,7 +79,7 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
 
 
 
