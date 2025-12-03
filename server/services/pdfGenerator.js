@@ -62,8 +62,8 @@ class PDFGenerator {
         body: JSON.stringify({
           // Most hosted Chrome/PDF services (e.g. Browserless) accept raw HTML
           html: htmlContent,
+          // Options are accepted by many providers; adjust to your service as needed.
           options: {
-            // Mirror our previous Puppeteer settings
             printBackground: true,
             format: "A4",
             margin: {
@@ -73,7 +73,6 @@ class PDFGenerator {
               left: "0.5in",
             },
           },
-          filename,
         }),
       });
 
