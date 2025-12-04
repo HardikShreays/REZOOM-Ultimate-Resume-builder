@@ -22,11 +22,15 @@
 - [✨ Features](#-features)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [🚀 Getting Started](#-getting-started)
+- [🤖 AI Features](#-ai-features)
 - [📁 Project Structure](#-project-structure)
 - [🔧 API Documentation](#-api-documentation)
 - [🎨 UI Components](#-ui-components)
+- [📄 PDF Generation Technology](#-pdf-generation-technology)
 - [📊 Database Schema](#-database-schema)
 - [🔐 Authentication](#-authentication)
+- [🚀 Deployment](#-deployment)
+- [🆕 Recent Updates](#-recent-updates)
 - [📱 Screenshots](#-screenshots)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
@@ -36,18 +40,22 @@
 ## ✨ Features
 
 ### 🎯 Core Features
-- **🤖 AI-Powered Generation**: Generate role-specific resumes automatically based on your profile data
+- **🤖 AI-Powered Chat Assistant**: Interactive AI assistant powered by Google Gemini 2.0 Flash Lite and LangGraph that helps you build and optimize your resume through natural conversation
+- **📄 AI Resume Generation**: Generate role-specific resumes automatically based on your profile data with intelligent filtering and optimization
+- **📤 PDF Resume Upload & Parsing**: Upload your existing PDF resume and let AI extract and populate your profile automatically
+- **🔗 GitHub Profile Import**: Automatically import your GitHub repositories as projects with a single URL
 - **📄 ATS Optimization**: Every resume is optimized to pass Applicant Tracking Systems
 - **📄 PDF Export**: Download professional PDF resumes with custom naming (Resume-{Name}.pdf)
 - **👁️ PDF Preview**: View resumes in browser before downloading
 - **🎨 Multiple Templates**: Choose from ATS-Friendly, Professional, and Creative templates
-- **👤 User Profiles**: Comprehensive user profiles with social links and portfolio integration
+- **👤 User Profiles**: Comprehensive user profiles with social links (GitHub, LinkedIn, Portfolio, Twitter, LeetCode, Codeforces, etc.) and portfolio integration
 - **📚 Experience Management**: Add and manage work experiences with detailed descriptions
 - **🎓 Education Tracking**: Track educational background and achievements
 - **💼 Project Portfolio**: Showcase your projects with tech stacks and live links
 - **🛠️ Skills Management**: Organize skills by proficiency levels
 - **🏆 Certifications**: Track professional certifications and credentials
 - **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile devices
+- **🌙 Dark Mode**: Beautiful dark mode support with theme toggle
 
 ### 🔒 Security Features
 - **🔐 JWT Authentication**: Secure token-based authentication
@@ -75,6 +83,9 @@
 - **🔐 JWT** - JSON Web Token authentication
 - **🛡️ Bcrypt** - Password hashing
 - **📄 Puppeteer** - HTML-based PDF generation (with `puppeteer-core` + `@sparticuz/chromium`)
+- **🤖 Google Gemini AI** - AI-powered chat assistant and resume parsing
+- **🔄 LangGraph** - AI agent workflow orchestration
+- **📝 LangChain** - LLM application framework
 
 ### Development Tools
 - **📝 ESLint** - Code linting and formatting
@@ -116,7 +127,15 @@
    DATABASE_URL="mysql://username:password@localhost:3306/rezoom_db"
    JWT_SECRET="your-super-secret-jwt-key"
    PORT=3001
+   GOOGLE_API_KEY="your-google-gemini-api-key"
+   FRONTEND_URL="http://localhost:3000"
+   NEXT_PUBLIC_FRONTEND_URL="http://localhost:3000"
    ```
+   
+   **Note**: Get your Google Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey). This is required for:
+   - AI chat assistant functionality
+   - PDF resume parsing
+   - AI-powered resume generation
 
 4. **Database Setup**
    ```bash
@@ -147,11 +166,33 @@
 
 1. **Create Account** - Sign up at http://localhost:3000/signup
 2. **Build Profile** - Add your experience, education, skills, and projects
+   - **Option A**: Manually add information through the dashboard
+   - **Option B**: Use the AI Chat Assistant to add information through conversation
+   - **Option C**: Upload your existing PDF resume and let AI extract the data
+   - **Option D**: Import your GitHub profile to automatically add projects
 3. **Generate Resume** - Go to Dashboard → Resume Builder
 4. **Choose Template** - Select from ATS-Friendly, Professional, or Creative
 5. **Download PDF** - Click "Download PDF" to get your professional resume
 
 **PDF Format**: Files are automatically named as `Resume-{YourName}.pdf`
+
+### AI Chat Assistant
+
+The AI Chat Assistant is your personal resume consultant powered by Google Gemini 2.0 Flash Lite:
+
+- **Natural Conversation**: Chat naturally about your career and resume
+- **Smart Data Entry**: Add experiences, projects, skills, and education through conversation
+- **Intelligent Filtering**: AI filters and optimizes your content for ATS compatibility
+- **Professional Rewriting**: Automatically rewrites descriptions to be more impactful
+- **Resume Generation**: Create resumes directly through chat
+- **GitHub Integration**: Import GitHub repositories by sharing your profile URL
+- **Social Links Extraction**: Automatically extracts and saves social profile links from your messages
+
+**Example Chat Commands**:
+- "Add my experience as a Software Engineer at Google from 2020 to 2023"
+- "Import my GitHub profile: https://github.com/username"
+- "Create a resume for a Software Engineer position"
+- "Add my project: E-commerce app built with React and Node.js"
 
 ---
 
@@ -265,6 +306,52 @@ Add skill to profile.
 #### `POST /profile/certification`
 Add certification.
 
+### AI Chat & Resume Parsing Endpoints
+
+#### `POST /chat`
+Chat with the AI assistant for resume guidance and profile management.
+
+**Request Body:**
+```json
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Add my experience as a Software Engineer at Google"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "reply": {
+    "content": "I've added your experience at Google..."
+  },
+  "operations": [
+    {
+      "type": "experience_added",
+      "message": "Experience added to your profile",
+      "link": "/dashboard/experience"
+    }
+  ]
+}
+```
+
+#### `POST /profile/upload-resume`
+Upload a PDF resume and extract profile data automatically.
+
+**Request:** Multipart form data with `resume` file
+
+**Response:**
+```json
+{
+  "message": "Resume uploaded and parsed successfully",
+  "summary": "Added 3 experiences, 2 educations, 5 skills..."
+}
+```
+
 ### Resume & PDF Generation Endpoints
 
 #### `GET /profile/resumes`
@@ -309,6 +396,53 @@ The project uses a modern component library built with:
 - `Card` - Content container with header, content, and footer
 - `Input` - Form input with validation states
 - `Badge` - Status and category indicators
+
+---
+
+## 🤖 AI Features
+
+REZOOM leverages Google Gemini 2.0 Flash Lite and LangGraph to provide intelligent resume building assistance:
+
+### AI Chat Assistant
+
+The AI Chat Assistant is built on LangGraph, providing a sophisticated conversational interface for resume building:
+
+- **Natural Language Processing**: Understand and process natural language requests
+- **Context-Aware Conversations**: Maintains conversation context across multiple messages
+- **Tool-Based Actions**: Uses structured tools to perform CRUD operations on your profile
+- **Smart Content Optimization**: Automatically filters and rewrites content for ATS compatibility
+- **Professional Guidance**: Provides honest, constructive feedback on your resume
+
+### AI Capabilities
+
+1. **Profile Data Management**
+   - Add/update/delete experiences, education, skills, projects, and certifications
+   - Extract social profile links from messages (GitHub, LinkedIn, Portfolio, etc.)
+   - Import GitHub repositories as projects
+
+2. **Resume Generation**
+   - Generate role-specific resumes with intelligent filtering
+   - Optimize content for ATS systems
+   - Rewrite descriptions to be more impactful and achievement-oriented
+
+3. **PDF Resume Parsing**
+   - Upload existing PDF resumes
+   - Extract structured data (experiences, education, skills, etc.)
+   - Automatically populate profile with extracted information
+
+4. **Content Intelligence**
+   - Filter out irrelevant or redundant information
+   - Use action verbs and quantify achievements
+   - Remove filler words and unprofessional language
+   - Maintain data integrity (never hallucinates or invents data)
+
+### AI Architecture
+
+- **LangGraph**: Workflow orchestration for multi-step AI operations
+- **LangChain**: LLM application framework
+- **Google Gemini 2.0 Flash Lite**: Fast, efficient language model
+- **Tool System**: Structured tools for database operations
+- **State Management**: Maintains conversation state and user context
 
 ---
 
@@ -406,6 +540,15 @@ The application uses JWT (JSON Web Tokens) for authentication:
 
 ## 🆕 Recent Updates
 
+### v3.0.0 - AI Chat Assistant & Advanced Features
+- ✅ **AI Chat Assistant** - Interactive AI-powered resume consultant using Google Gemini 2.0 Flash Lite and LangGraph
+- ✅ **PDF Resume Upload & Parsing** - Upload existing PDF resumes and automatically extract profile data
+- ✅ **GitHub Profile Import** - Import GitHub repositories as projects with a single URL
+- ✅ **Smart Social Links Extraction** - Automatically extract and save social profile links from chat messages
+- ✅ **Intelligent Content Filtering** - AI filters and optimizes resume content for ATS compatibility
+- ✅ **Professional Content Rewriting** - AI rewrites descriptions to be more impactful and achievement-oriented
+- ✅ **Natural Language Profile Management** - Add experiences, projects, skills through conversation
+
 ### v2.0.0 - PDF Generation & Enhanced UI
 - ✅ **PDF Export Functionality** - Download professional PDF resumes
 - ✅ **PDF Preview** - View resumes in browser before downloading
@@ -416,10 +559,12 @@ The application uses JWT (JSON Web Tokens) for authentication:
 - ✅ **Professional Templates** - ATS-Friendly, Professional, and Creative options
 
 ### Technical Improvements
+- **LangGraph Integration** - Advanced AI agent workflow orchestration
+- **Google Gemini AI** - State-of-the-art language model for chat and parsing
 - **Puppeteer Integration** - High-quality PDF generation
-- **LaTeX to HTML Conversion** - Advanced document rendering
 - **Dynamic Metadata** - SEO-optimized page titles and descriptions
 - **Enhanced Security** - Protected PDF downloads with JWT authentication
+- **CORS Configuration** - Flexible CORS setup for multiple deployment environments
 
 ---
 
@@ -437,6 +582,14 @@ The application uses JWT (JSON Web Tokens) for authentication:
 - Project portfolio with tech stack display
 - Skills and certifications management
 - Resume builder with template selection
+- AI Chat Assistant access
+
+### AI Chat Assistant
+- Natural conversation interface
+- Real-time profile updates
+- Smart notifications for operations
+- GitHub profile import
+- PDF resume upload and parsing
 
 ### Resume Builder
 - Template selection interface
@@ -445,6 +598,39 @@ The application uses JWT (JSON Web Tokens) for authentication:
 - Custom naming and organization
 
 ---
+
+## 🚀 Deployment
+
+### Production Deployment
+
+For detailed deployment instructions, see:
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Full Vercel deployment guide
+- **[FRONTEND_DEPLOYMENT.md](./FRONTEND_DEPLOYMENT.md)** - Frontend-only deployment guide
+
+### Quick Deployment Options
+
+1. **Vercel (Frontend + Backend)**
+   - Deploy frontend to Vercel with root directory `client`
+   - Deploy backend separately or use Vercel serverless functions
+   - Configure environment variables in Vercel dashboard
+
+2. **Railway (Backend) + Vercel (Frontend)**
+   - Deploy backend to Railway with root directory `server`
+   - Deploy frontend to Vercel with root directory `client`
+   - Update `NEXT_PUBLIC_API_URL` in frontend environment variables
+
+### Required Environment Variables
+
+**Backend:**
+- `DATABASE_URL` - MySQL database connection string
+- `JWT_SECRET` - Secret key for JWT tokens
+- `GOOGLE_API_KEY` - Google Gemini API key (required for AI features)
+- `PORT` - Server port (default: 3001)
+- `FRONTEND_URL` - Frontend URL for CORS
+- `NEXT_PUBLIC_FRONTEND_URL` - Frontend URL for CORS
+
+**Frontend:**
+- `NEXT_PUBLIC_API_URL` - Backend API URL
 
 ## 🤝 Contributing
 
@@ -470,6 +656,7 @@ We welcome contributions! Please follow these steps:
 - Write meaningful commit messages
 - Add tests for new features
 - Update documentation as needed
+- Ensure AI features work with proper API keys
 
 ---
 
@@ -485,6 +672,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Prisma Team** - For the excellent database ORM
 - **Tailwind CSS** - For the utility-first CSS framework
 - **Radix UI** - For accessible component primitives
+- **Google Gemini** - For powerful AI capabilities
+- **LangChain & LangGraph** - For AI agent orchestration
+- **Puppeteer** - For high-quality PDF generation
+
+## 📚 Additional Resources
+
+- **API Documentation** - See [API Documentation](#-api-documentation) section above
+- **Deployment Guides** - See [DEPLOYMENT.md](./DEPLOYMENT.md) and [FRONTEND_DEPLOYMENT.md](./FRONTEND_DEPLOYMENT.md)
+- **Database Schema** - See [Database Schema](#-database-schema) section above
 
 ---
 
