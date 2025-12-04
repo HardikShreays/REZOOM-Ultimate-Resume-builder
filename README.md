@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/React-19.1.0-blue?style=for-the-badge&logo=react" alt="React" />
   <img src="https://img.shields.io/badge/Node.js-Express-green?style=for-the-badge&logo=node.js" alt="Node.js" />
   <img src="https://img.shields.io/badge/Prisma-Database-orange?style=for-the-badge&logo=prisma" alt="Prisma" />
-  <img src="https://img.shields.io/badge/MySQL-Database-blue?style=for-the-badge&logo=mysql" alt="MySQL" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Database-blue?style=for-the-badge&logo=postgresql" alt="PostgreSQL" />
 </div>
 
 <br>
@@ -79,7 +79,7 @@
 - **🚀 Node.js** - JavaScript runtime
 - **⚡ Express.js** - Fast, unopinionated web framework
 - **🗄️ Prisma** - Modern database ORM
-- **🐬 MySQL** - Relational database
+- **🐘 PostgreSQL** - Relational database
 - **🔐 JWT** - JSON Web Token authentication
 - **🛡️ Bcrypt** - Password hashing
 - **📄 Puppeteer** - HTML-based PDF generation (with `puppeteer-core` + `@sparticuz/chromium`)
@@ -98,7 +98,7 @@
 
 ### Prerequisites
 - Node.js (v18 or higher)
-- MySQL database
+- PostgreSQL database
 - npm or yarn package manager
 
 ### Installation
@@ -124,7 +124,7 @@
    
    Create a `.env` file in the server directory:
    ```env
-   DATABASE_URL="mysql://username:password@localhost:3306/rezoom_db"
+   DATABASE_URL="postgresql://username:password@localhost:5432/rezoom_db"
    JWT_SECRET="your-super-secret-jwt-key"
    PORT=3001
    GOOGLE_API_KEY="your-google-gemini-api-key"
@@ -622,7 +622,7 @@ For detailed deployment instructions, see:
 ### Required Environment Variables
 
 **Backend:**
-- `DATABASE_URL` - MySQL database connection string
+- `DATABASE_URL` - PostgreSQL database connection string
 - `JWT_SECRET` - Secret key for JWT tokens
 - `GOOGLE_API_KEY` - Google Gemini API key (required for AI features)
 - `PORT` - Server port (default: 3001)
