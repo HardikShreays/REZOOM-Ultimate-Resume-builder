@@ -106,8 +106,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/rezoom-resume-builder.git
-   cd rezoom-resume-builder
+   git clone https://github.com/HardikShreays/REZOOM-Ultimate-Resume-builder.git
+   cd REZOOM-Ultimate-Resume-builder
    ```
 
 2. **Install dependencies**
