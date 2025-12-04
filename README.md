@@ -6,6 +6,7 @@
   <img src="https://img.shields.io/badge/Node.js-Express-green?style=for-the-badge&logo=node.js" alt="Node.js" />
   <img src="https://img.shields.io/badge/Prisma-Database-orange?style=for-the-badge&logo=prisma" alt="Prisma" />
   <img src="https://img.shields.io/badge/PostgreSQL-Database-blue?style=for-the-badge&logo=postgresql" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/LangGraph-AI%20Agents-purple?style=for-the-badge" alt="LangGraph" />
 </div>
 
 <br>
